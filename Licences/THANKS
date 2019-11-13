@@ -1,0 +1,22 @@
+******************************************************************************
+***                            MG-APPS THANKS file.                        ***
+******************************************************************************
+
+We would like to thank the IGS, CNES, and GFZ for providing 
+GNSS data and orbit and clock products. Furthermore, we would 
+like to thank Natural Resources Canada for its latest CSRS-PPP 
+online application. In addition, we are grateful to Dashuai Chai, 
+Yulong Ge, Chuanbao Zhao, Xiaolong Mi and Feng Zhou for their 
+valuable suggestions.
+
+Software:
+Qt: <www.qt.io>
+Eigen: <eigen.tuxfamily.org>
+RTKLIB: <www.rtklib.com>
+QCustomPlot: <www.qcustomplot.com>
+
+
+
+
+
+
