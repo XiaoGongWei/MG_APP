@@ -4,9 +4,9 @@
 
  Author  : Xiaogongwei
  
-           E-mail: <xiaogongwei10@163.com>
-           [My Github](https://github.com/XiaoGongWei)
-           Blog: [https://blog.csdn.net/xiaoxiao133](https://blog.csdn.net/xiaoxiao133)
+           E-mail: <xiaogongwei10@163.com><br>
+           My Github: https://github.com/XiaoGongWei<br>
+           My Blog: https://blog.csdn.net/xiaoxiao133<br>
 	   
  Version : 1.0
  
