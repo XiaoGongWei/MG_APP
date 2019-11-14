@@ -6,11 +6,10 @@
  
            E-mail: <xiaogongwei10@163.com>
 	   
-           Github: [https://github.com/XiaoGongWei] (https://github.com/XiaoGongWei)
+           [My Github](https://github.com/XiaoGongWei)
 	   
            Blog: [https://blog.csdn.net/xiaoxiao133] (https://blog.csdn.net/xiaoxiao133)
 	   
-	   [https://www.auscors.ga.gov.au](https://www.auscors.ga.gov.au)
  Version : 1.0
  
  Date    : 26 Apr 2019
@@ -47,6 +46,7 @@ convergence process of PPP, and reverse filtering can be used to provide precise
 coordinates and high resolution tropospheric products.
 
  Have fun,
+ 
   Xiaogongwei
 
  Appendix A: 
