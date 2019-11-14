@@ -277,18 +277,14 @@ void QKalmanFilter::KalmanforStatic(MatrixXd Bk,VectorXd Lk,MatrixXd F,MatrixXd 
     tempKB = Kk*Bk;
     I.resize(tempKB.rows(),tempKB.cols());
     I.setIdentity();
-    //Update P (Case I) (this update is extremely unstable)
+    //Update P (Case I) 
     tPk_1 = (I - tempKB)*Pkk_1;
-
 
     //Update P(Case II)
 //    MatrixXd Mk_1 = Pkk_1.inverse() + Bk.transpose()*Rk.inverse()*Bk;
 //    tPk_1 =Mk_1.inverse();
 //    MatrixXd newPk =  0.5*(tPk_1 + tPk_1.transpose());
 //    tPk_1 = newPk;
-    //printMatrix(tPk_1);
-//    tPk_1 = 0.5*(tPk_1 + tPk_1.transpose());	//(In theory, it should be added but added or beating. Changed the original covariance data)
-    //printMatrix(tPk_1);
 }
 
 
@@ -330,7 +326,7 @@ void QKalmanFilter::KalmanforStatic(MatrixXd Bk,VectorXd Lk,MatrixXd F,MatrixXd 
 //    I.resize(tempKB.rows(),tempKB.cols());
 //    I.setIdentity();
 //    m_matrix.keepMatPricision(tempKB,keepnum);
-//    //Update P (Case I) (this update is extremely unstable)
+//    //Update P (Case I)
 //    tPk_1 = (I - tempKB)*Pkk_1;
 //    //Update P(Case II)
 ////    MatrixXd Mk_1 = Pkk_1.inverse() + Bk.transpose()*Rk.inverse()*Bk;
@@ -339,8 +335,6 @@ void QKalmanFilter::KalmanforStatic(MatrixXd Bk,VectorXd Lk,MatrixXd F,MatrixXd 
 
 //    m_matrix.keepMatPricision(tPk_1,keepnum);
 
-////    tPk_1 = 0.5*(tPk_1 + tPk_1.transpose());	//(In theory, it should be added but added or beating. Changed the original covariance data)
-//    //printMatrix(tPk_1);
 //}
 
 
