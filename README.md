@@ -1,14 +1,14 @@
 
-	MG-APPS（Multi-GNSS-Automatic Precise Positioning Software）
+#	MG-APPS（Multi-GNSS-Automatic Precise Positioning Software）
 
 
  Author  : Xiaogongwei
  
-           <xiaogongwei10@163.com>
+           E-mail: <xiaogongwei10@163.com>
 	   
-           https://github.com/XiaoGongWei   
+           Github: https://github.com/XiaoGongWei(https://github.com/XiaoGongWei)
 	   
-           https://blog.csdn.net/xiaoxiao133
+           Blog: https://blog.csdn.net/xiaoxiao133(https://blog.csdn.net/xiaoxiao133)
 	   
  Version : 1.0
  
