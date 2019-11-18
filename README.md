@@ -1,5 +1,5 @@
 
-#	MG-APPS（Multi-GNSS-Automatic Precise Positioning Software）
+#	MG-APP（Multi-GNSS-Automatic Precise Positioning software）
 
 
  Author  : Xiaogongwei
@@ -49,7 +49,7 @@ coordinates and high resolution tropospheric products.
 
  Appendix A: 
 
- MG-APPS are distributed under the terms of the version 3 of the GNU General
+ MG-APP are distributed under the terms of the version 3 of the GNU General
  Public License (GPLv3).  See the file COPYING.
  Copyright (C) 2016-2019 XiaoGongWei 
  Special licenses for commercial and other applications which
