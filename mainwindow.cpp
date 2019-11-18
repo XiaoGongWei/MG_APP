@@ -37,7 +37,7 @@ void MainWindow::initWindow()
     // fix windows
     setFixedSize(this->width(), this->height());
     setWindowIcon(QIcon("widget.ico"));
-    setWindowTitle("MG-APPS v1.0");
+    setWindowTitle("MG-APP v1.0");
     // connect signal to slots
     // pushButon
     connect(ui->pushButton_Select, SIGNAL(clicked(bool)), this, SLOT(selectFilePath()));
@@ -53,7 +53,7 @@ void MainWindow::initWindow()
     m_otherMenu = menuBar()->addMenu("&About");
     m_otherMenu->addAction(m_AboutAct);
     // status tip
-    setStatusTip("MG-APPS is runing.");
+    setStatusTip("MG-APP is runing.");
     ui->pushButton_Run->setStatusTip("Run PPP in single station.");
     ui->pushButton_RunBatch->setStatusTip("Run PPP in multiply stations.");
     ui->pushButton_SPP->setStatusTip("Run SPP in single station.");

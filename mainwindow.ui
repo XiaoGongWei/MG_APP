@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MG-APPS</string>
+   <string>MG-APP</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLineEdit" name="textEdit_FilePath">

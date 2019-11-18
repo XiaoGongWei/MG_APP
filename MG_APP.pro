@@ -11,7 +11,7 @@ RC_ICONS = widget.ico
 QT += core
 QT += network
 
-TARGET = MG_APPS
+TARGET = MG_APP
 TEMPLATE = app
 INCLUDEPATH += \
 ./resources/myeigen
