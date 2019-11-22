@@ -39,7 +39,6 @@ SOURCES += \
     QReadAnt.cpp \
     QPPPModel.cpp \
     QNewFunLib.cpp \
-    QLambda.cpp \
     QKalmanFilter.cpp \
     QCmpGPST.cpp \
     QBaseObject.cpp \
@@ -80,7 +79,6 @@ HEADERS += \
     QReadAnt.h \
     QPPPModel.h \
     QNewFunLib.h \
-    QLambda.h \
     QKalmanFilter.h \
     QGlobalDef.h \
     QCmpGPST.h \
