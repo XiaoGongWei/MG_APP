@@ -1,7 +1,6 @@
 
 #	MG-APP（Multi-GNSS-Automatic Precise Positioning software）
 
-
  Author  : Xiaogongwei
  
            E-mail: <xiaogongwei10@163.com>
@@ -11,6 +10,9 @@
  Version : 1.0
  
  Date    : 26 Apr 2019
+ 
+ 
+![Main Window](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/fig2.png)
 
 ## English:
 
