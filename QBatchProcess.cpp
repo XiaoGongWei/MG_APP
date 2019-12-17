@@ -80,7 +80,7 @@ bool QBatchProcess::Run(bool isDisplayEveryEpoch)
     int allStations_len = floder_list.length();
     for(int i = 0;i < allStations_len; i++)
     {
-        QString ppp_path = floder_list.at(i) + PATHSEG;
+        QString ppp_path = floder_list.at(i);
         disPlayQTextEdit = "****** Will use PPP process station: " + m_AllStations.at(i) +
                 + " ( " + QString::number(i+1) + "/" + QString::number(allStations_len) +  " ) ******" +ENDLINE;
         autoScrollTextEdit(mp_QTextEdit, disPlayQTextEdit);// display for QTextEdit

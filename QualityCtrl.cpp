@@ -129,7 +129,7 @@ bool QualityCtrl::VtPVCtrl_Filter_LC(MatrixXd mat_B, VectorXd vec_L, VectorXd ve
     // find gross error
     for(int i = 0;i < sat_len; i++)
     {
-        bool bad_error = (vec_V1_abs[i] > 0.15 + v1_mean1_abs);// (vec_V_abs[i] > 3*Zgama_L && vec_V_abs[i] > 0.008) || (vec_V_abs[i] > 0.15)
+        bool bad_error = (vec_V1_abs[i] > 0.10 || vec_V2_abs[i] > 10.0 );// (vec_V_abs[i] > 3*Zgama_L && vec_V_abs[i] > 0.008) || (vec_V_abs[i] > 0.15)
         if(bad_error)// Carrier residual less than (3*Zgama_L&&0.08) and 15 cm 2019.05.05
         {
             del_flag[i] = 1;// use 1 to Delete indication
@@ -144,14 +144,20 @@ bool QualityCtrl::VtPVCtrl_Filter_LC(MatrixXd mat_B, VectorXd vec_L, VectorXd ve
     if(keep_pro < 0.8)
     {// delete n max error
         del_flag.setZero();
-        int max_flag1 = 0;
+        int max_flag1 = 0, max_flag2 = 0;
         for(int i = 0;i < 1;i++)
         {
             vec_V1_abs.maxCoeff(&max_flag1);
-            if((vec_V1_abs[max_flag1] > 0.15 + v1_mean1_abs))
+            vec_V2_abs.maxCoeff(&max_flag2);
+            if((vec_V1_abs[max_flag1] > 0.10))
             {
                 del_flag[max_flag1] = 1; del_flag[max_flag1+sat_len] = 1;
                 vec_V1_abs[max_flag1] = -1;
+            }
+            if((vec_V2_abs[max_flag2] > 10.0))
+            {
+                del_flag[max_flag2] = 1; del_flag[max_flag2+sat_len] = 1;
+                vec_V2_abs[max_flag2] = -1;
             }
         }
         is_Gross_Error = true;

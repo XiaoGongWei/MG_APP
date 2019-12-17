@@ -105,7 +105,7 @@ void QPPPModel::setConfigure(QString Method, QString Satsystem, QString TropDela
    {
        m_KalmanClass.setModel(QKalmanFilter::KALMAN_MODEL::PPP_STATIC);// set static model
        m_SRIFAlgorithm.setModel(SRIFAlgorithm::SRIF_MODEL::PPP_STATIC);
-       m_minSatFlag = 5;// Dynamic Settings 1, Static Settings 1
+       m_minSatFlag = 1;// Dynamic Settings 1, Static Settings 1
    }
 
 
@@ -808,7 +808,9 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             else
             {
                 epochResultSatlitData.clear();
+                memset(spp_vct, 0, 3*sizeof(double));
                 memset(spp_pos, 0, 3*sizeof(double));
+                X.setZero();
             }
 //Output calculation result(print result)
             // display every epoch results

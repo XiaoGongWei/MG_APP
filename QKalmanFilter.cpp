@@ -568,7 +568,7 @@ bool QKalmanFilter::KalmanforStatic(QVector< SatlitData > &preEpoch,QVector< Sat
         }
         // delete gross Errors
         int del_len = del_flag.length();
-        if(epochLenLB - del_len >= 5)
+        if(epochLenLB - del_len >= 1)
         {
             for(int i = 0; i < del_len;i++)
                 currEpoch.remove(del_flag[i]);
