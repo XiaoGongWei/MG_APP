@@ -400,7 +400,7 @@ void QPPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
             if(F1 == 0 || F2 == 0) continue;//Frequency cannot be 0
             //Computational relativity correction
             double relative = 0;
-            if(spp_pos[0] !=0 ) relative = getRelativty(pXYZ,spp_pos,pdXYZ);
+            if(spp_pos[0] !=0 ) relative = getRelativty(tempSatlitData.SatType,pXYZ,spp_pos,pdXYZ);
             tempSatlitData.Relativty = relative;
             //Calculate the autobiographic correction of the earth
             double earthW = 0;
@@ -694,7 +694,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 if(F1 == 0 || F2 == 0) continue;//Frequency cannot be 0
                 //Computational relativity correction
                 double relative = 0;
-                relative = getRelativty(pXYZ,spp_pos,pdXYZ);
+                relative = getRelativty(tempSatlitData.SatType,pXYZ,spp_pos,pdXYZ);
                 tempSatlitData.Relativty = relative;
                 //Calculate the satellite's high sitting angle (as the receiver approximates the target)
                 double EA[2]={0};
@@ -1145,11 +1145,11 @@ void QPPPModel::getWight(SatlitData &tempSatlitData)
 }
 
 //Computational relativistic effect
-double QPPPModel::getRelativty(double *pSatXYZ,double *pRecXYZ,double *pSatdXYZ)
+double QPPPModel::getRelativty(char SatType, double *pSatXYZ,double *pRecXYZ,double *pSatdXYZ)
 {
     /*double c = 299792458.0;
     double dltaP = -2*(pSatXYZ[0]*pSatdXYZ[0] + pSatdXYZ[1]*pdXYZ[1] + pSatXYZ[2]*pSatdXYZ[2]) / c;*/
-    double b[3] = {0},a = 0,R = 0,Rs = 0,Rr = 0,v_light = 299792458.0,GM=3.9860047e14,dltaP = 0;
+    double b[3] = {0},a = 0,R = 0,Rs = 0,Rr = 0,v_light = 299792458.0,dltaP = 0;
     b[0] = pRecXYZ[0] - pSatXYZ[0];
     b[1] = pRecXYZ[1] - pSatXYZ[1];
     b[2] = pRecXYZ[2] - pSatXYZ[2];
@@ -1157,7 +1157,17 @@ double QPPPModel::getRelativty(double *pSatXYZ,double *pRecXYZ,double *pSatdXYZ)
     R=qCmpGpsT.norm(b,3);
     Rs = qCmpGpsT.norm(pSatXYZ,3);
     Rr = qCmpGpsT.norm(pRecXYZ,3);
-    dltaP=-2*a/M_C + (2*M_GM/qPow(M_C,2))*qLn((Rs+Rr+R)/(Rs+Rr-R));
+
+    double oldM_GM = 3.986005e14, old_We = 7.2921151467E-5;// GPS
+    switch(SatType)
+    {
+    case 'G':   oldM_GM = 3.986005e14;  old_We = 7.2921151467E-5;  break;
+    case 'R':   oldM_GM = 3.9860044E14;  old_We = 7.292115E-5;  break;
+    case 'E':   oldM_GM = 3.986004418E14; old_We = 7.2921151467E-5;   break;
+    case 'C':   oldM_GM = 3.986004418E14;  old_We = 7.292115E-5;  break;
+    }
+    double gravity_delay =  (2*oldM_GM/(v_light*v_light))*qLn((Rs+Rr+R)/(Rs+Rr-R));
+    dltaP=-2*a/M_C - gravity_delay;
     return dltaP;//m
 }
 
@@ -1545,7 +1555,7 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
 void QPPPModel::writeResult2File()
 {
     QString product_path = m_run_floder, ambiguit_floder;
-    QString floder_name = "Products_" + m_Solver_Method + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
+    QString floder_name = "XIAO_Products_" + m_Solver_Method + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
     if(m_isKinematic)
         floder_name = "Products_" + m_Solver_Method + "_Kinematic_" + m_sys_str +PATHSEG;
     product_path.append(floder_name);

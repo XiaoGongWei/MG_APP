@@ -91,7 +91,7 @@ private:
     void getCLKData(int PRN,char SatType,double GPST,double *pCLKT);// obtain satellite clock error within seconds of GPST launch time
     void getSatEA(double X,double Y,double Z,double *approxRecvXYZ,double *EA);// Calculate height Angle and azimuth EA
     double getSagnac(double X,double Y,double Z,double *approxRecvXYZ);// the autobiography of the earth(m)
-    double getRelativty(double *pSatXYZ,double *pRecXYZ,double *pSatdXYZ);// Calculate relativistic effects
+    double getRelativty(char SatType,double *pSatXYZ,double *pRecXYZ,double *pSatdXYZ);// Calculate relativistic effects
     void getWight(SatlitData &tempSatlitData);// obtain weights of different satellite systems
     void getTropDelay(double MJD,int TDay,double E,double *pBLH,double *mf = NULL, double *ZHD_s = NULL, double *ZPD = NULL, double *ZHD = NULL);// MJD: simplified Julian day, TDay: annual product day, E: altitude Angle (rad) pBLH: geodetic coordinate system, *mf: projection function
     bool getRecvOffset(double *EA,char SatType,double &L1Offset,double &L2Offset, QVector<QString> FrqFlag);// Calculation receiver L1 and L2 phase center correction PCO+PCV,EA: height Angle, azimuth (unit rad), L1Offset and L2Offset represent distance correction of line of sight direction (unit m)
