@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
 **  Copyright (C) 2016-2019 XiaoGongWei
-**  This file is part of MG-APP.
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser

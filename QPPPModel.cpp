@@ -49,15 +49,31 @@ QPPPModel::QPPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method,
     // find Atx files
     tempFilters.clear();
     tempFilters.append("*.atx");
-    AtxFileNamesList = searchFilterFile(m_App_floder, tempFilters);
+    QStringList run_floder, app_floder;
+    run_floder = searchFilterFile(m_run_floder, tempFilters);
+    app_floder = searchFilterFile(m_App_floder, tempFilters);
+    AtxFileNamesList.append(run_floder);
+    AtxFileNamesList.append(app_floder);
+    run_floder.clear();
+    app_floder.clear();
     // find blq files
     tempFilters.clear();
     tempFilters.append("*.blq");
-    BlqFileNamesList = searchFilterFile(m_App_floder, tempFilters);
+    run_floder = searchFilterFile(m_run_floder, tempFilters);
+    app_floder = searchFilterFile(m_App_floder, tempFilters);
+    BlqFileNamesList.append(run_floder);
+    BlqFileNamesList.append(app_floder);
+    run_floder.clear();
+    app_floder.clear();
     // find grd files
     tempFilters.clear();
     tempFilters.append("*.grd");
-    GrdFileNamesList = searchFilterFile(m_App_floder, tempFilters);
+    run_floder = searchFilterFile(m_run_floder, tempFilters);
+    app_floder = searchFilterFile(m_App_floder, tempFilters);
+    GrdFileNamesList.append(run_floder);
+    GrdFileNamesList.append(app_floder);
+    run_floder.clear();
+    app_floder.clear();
     // get want file
     // o file
     QString OfileName = "", erpFile = "", blqFile = "", atxFile = "", grdFile = "";
@@ -631,7 +647,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 // translation to ENU
                 VectorXd ENU_Vct;
                 double spp_vct[3] = {0};
-                int param_len = epochSatlitData.length() + 32;
+                int param_len = 3*epochSatlitData.length() + 32;
                 ENU_Vct.resize(param_len);
                 ENU_Vct.fill(0);
                 // debug by xiaogongwei 2019.02.21
@@ -778,7 +794,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 // translation to ENU
                 VectorXd ENU_Vct;
                 double spp_vct[3] = {0};
-                int param_len = epochResultSatlitData.length() + 32;
+                int param_len = 3*epochResultSatlitData.length() + 32;
                 ENU_Vct.resize(param_len);
                 ENU_Vct.fill(0);
                 MatrixXd P;
@@ -804,10 +820,13 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
 
 //Save the last epoch satellite data
             if(is_filter_good)
+            {
                 prevEpochSatlitData = epochResultSatlitData;
+                continue_bad_epoch = 0;
+            }
             else
             {
-                epochResultSatlitData.clear();
+                continue_bad_epoch++;
                 memset(spp_vct, 0, 3*sizeof(double));
                 memset(spp_pos, 0, 3*sizeof(double));
                 X.setZero();
@@ -838,7 +857,6 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             ENU_Vct[0] = spp_pos[0]; ENU_Vct[1] = spp_pos[1]; ENU_Vct[2] = spp_pos[2];
             saveResult2Class(ENU_Vct, spp_vct, epochTime, epochResultSatlitData, epoch_num, &P);
             epoch_num++;//Increase in epoch
-            continue_bad_epoch = 0;
         }//End of multiple epochs.  (int n = 0; n < multepochSatlitData.length();n++)
 
 
@@ -1555,7 +1573,7 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
 void QPPPModel::writeResult2File()
 {
     QString product_path = m_run_floder, ambiguit_floder;
-    QString floder_name = "XIAO_Products_" + m_Solver_Method + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
+    QString floder_name = "Products_" + m_Solver_Method + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
     if(m_isKinematic)
         floder_name = "Products_" + m_Solver_Method + "_Kinematic_" + m_sys_str +PATHSEG;
     product_path.append(floder_name);

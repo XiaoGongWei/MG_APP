@@ -610,17 +610,21 @@ bool QKalmanFilter::KalmanforStatic(QVector< SatlitData > &preEpoch,QVector< Sat
         }
     }
 
+    //Save the results of this epoch (does not contain initialization data)
+    X = m_Xk_1;
+    P = m_Pk_1;
     if(gross_LC)
     {
         // restore filter state
         m_Fk_1 = temp_Fk_1; m_Qwk_1 = temp_Qwk_1; m_Rk_1 = temp_Rk_1;
         m_Pk_1 = temp_Pk_1; m_Xk_1 = temp_Xk_1;
         memcpy(m_SPP_Pos, temp_SPP_POS, 3*sizeof(double));
-        currEpoch.clear();
+        X.setZero();
+        P.setIdentity();
+        P = P * 1e10;
     }
 
-    X = m_Xk_1;//Save the results of this epoch (does not contain initialization data)
-    P = m_Pk_1;
+
     // update m_ApproxRecPos use kalman
     m_ApproxRecPos[0] = m_SPP_Pos[0] + m_Xk_1(0);
     m_ApproxRecPos[1] = m_SPP_Pos[1] + m_Xk_1(1);

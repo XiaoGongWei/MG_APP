@@ -242,7 +242,12 @@ void QReadClk::readFileData2Vec(QStringList ClkFileNames)
 		{
 			//Skip the area that is not the beginning of the clock error
 			while(tempLine.mid(0,3) != "AS ")
-				tempLine = clkfile.readLine();
+            {
+                tempLine = clkfile.readLine();
+                if(clkfile.atEnd()) break;
+            }
+            if(clkfile.atEnd()) break;
+
 			//Read an epoch error
 			epochData.MatrixDataGPS.setZero();//It is best to clear before use, although it increases the amount of calculation but is safe.
 			epochData.MatrixDataGlonass.setZero();

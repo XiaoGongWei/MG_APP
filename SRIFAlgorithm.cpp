@@ -640,6 +640,9 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
         }
     }
 
+    //Save the results of this epoch (does not contain initialization data)
+    X = m_Xk;
+    P = (m_Rp.transpose()*m_Rp).inverse();
     if(gross_LC)
     {
         // restore filter state
@@ -647,11 +650,11 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
         m_Phi = temp_Phi; m_Rwk = temp_Rwk; m_Q = temp_Q;
         m_Xk = temp_Xk;
         memcpy(m_SPP_Pos, temp_SPP_POS, 3*sizeof(double));
-        currEpoch.clear();
+        X.setZero();
+        P.setIdentity();
+        P = P * 1e10;
     }
 
-    X = m_Xk;//Save the results of this epoch (does not contain initialization data)
-    P =  (m_Rp.transpose()*m_Rp).inverse();
 
     // update m_ApproxRecPos use SRIF
     m_ApproxRecPos[0] = m_SPP_Pos[0] + m_Xk(0);

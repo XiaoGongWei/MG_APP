@@ -606,7 +606,7 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
                 // translation to ENU
                 VectorXd ENU_Vct;
                 double spp_vct[3] = {0};
-                ENU_Vct.resize(32+epochSatlitData.length());
+                ENU_Vct.resize(32+3*epochSatlitData.length());
                 ENU_Vct.fill(0);
                 saveResult2Class(ENU_Vct, spp_vct, epochTime, epochSatlitData, epoch_num);
                 continue;

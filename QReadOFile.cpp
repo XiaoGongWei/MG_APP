@@ -189,21 +189,20 @@ void QReadOFile::getHeadInf()
             tempObsType.obsNum3ver = tempLine.mid(3, 3).trimmed().toInt();
             QString obstypeName = "";
             int flag = 0, hang = 0, i = 0;
-            hang = int (tempObsType.obsNum3ver / 13.1) + 1;
-            for(int h = 0; h < hang; h++)
+
+            for (i = 0; i < tempObsType.obsNum3ver;i++)
             {
-                for (i = 0; i < tempObsType.obsNum3ver;i++)
+                obstypeName = tempLine.mid(6 + flag * 4, 4).trimmed();
+                flag++;
+                tempObsType.obsNames3ver.append(obstypeName);
+                //Exceeding 13 parsing the next line
+                if (flag % 13 == 0)
                 {
-                    obstypeName = tempLine.mid(6 + flag * 4, 4).trimmed();
-                    flag++;
-                    tempObsType.obsNames3ver.append(obstypeName);
-                    //Exceeding 13 parsing the next line
-                    if (flag % 13 == 0) flag = 0;
+                    tempLine = m_readOFileClass.readLine();
+                    flag = 0;
                 }
-                // if least number > 0 must read line
-                int least_num = tempObsType.obsNum3ver - hang*13;
-                if(least_num > 0) tempLine = m_readOFileClass.readLine();
             }
+
             m_obsVarNamesVer3.append(tempObsType);//Save this system data
         }
         else if (tempLine.contains("INTERVAL",Qt::CaseInsensitive))
@@ -327,7 +326,7 @@ void QReadOFile::getFrequencyVer3(SatlitData &oneSatlite)
 	{
 		oneSatlite.Frq[0] = M_GLONASSF1(g_GlonassK[oneSatlite.PRN - 1]);
 		oneSatlite.Frq[1] = M_GLONASSF2(g_GlonassK[oneSatlite.PRN - 1]);
-        oneSatlite.Frq[3] = 1.202025e9;
+        oneSatlite.Frq[2] = 1.202025e9;
 	} 
 	else if (oneSatlite.SatType == 'C')
 	{
@@ -583,7 +582,7 @@ void QReadOFile::ProcessCLPos(obsVarNamesVer3 epochSystem)
     }
     else if(epochSystem.SatType.contains("C", Qt::CaseInsensitive))
     {// BDS 1 7 6 or 2
-        frqenceStr[0] = "1"; frqenceStr[1] = "7"; frqenceStr[2] = "6"; frqenceStr[3] = "2";
+        frqenceStr[0] = "2"; frqenceStr[1] = "7"; frqenceStr[2] = "6"; frqenceStr[3] = "1";
         prioLen = 3;
         prioArry[0] = "I"; prioArry[1] = "Q"; prioArry[2] = "X";
     }

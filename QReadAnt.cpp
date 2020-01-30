@@ -74,7 +74,7 @@ bool QReadAnt::openFiles(QString AntFileName)
         m_ReadFileClass.setFileName(AntFileName);
         if (!m_ReadFileClass.open(QFile::ReadOnly))//If the file fails to open...
         {
-            m_ReadFileClass.setFileName("antmod.atx");//Open to current directory
+            m_ReadFileClass.setFileName("igs14_2035.atx");//Open to current directory
             if (!m_ReadFileClass.open(QFile::ReadOnly))
             {
                 isReadHead = true;

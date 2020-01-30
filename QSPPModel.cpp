@@ -897,7 +897,7 @@ double QSPPModel::getRelativty(double *pSatXYZ,double *pRecXYZ,double *pSatdXYZ)
     R=qCmpGpsT.norm(b,3);
     Rs = qCmpGpsT.norm(pSatXYZ,3);
     Rr = qCmpGpsT.norm(pRecXYZ,3);
-    dltaP=-2*a/M_C + (2*M_GM/qPow(M_C,2))*qLn((Rs+Rr+R)/(Rs+Rr-R));
+    dltaP=-2*a/M_C - (2*M_GM/qPow(M_C,2))*qLn((Rs+Rr+R)/(Rs+Rr-R));
     return dltaP;//m
 }
 

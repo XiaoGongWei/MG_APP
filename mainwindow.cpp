@@ -22,7 +22,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::AboutApp()
 {
-    QMessageBox::information(NULL, tr("About"), tr("This app was creat by XiaoGongWei.\n E-mail: xiaogongwei10@163.com\n github: github.com/xiaogongwei/PPP"));
+    QMessageBox::information(NULL, tr("About"), tr("This app was creat by XiaoGongWei.\n E-mail: xiaogongwei10@163.com\n github: github.com/xiaogongwei"));
 }
 
 void MainWindow::initWindow()
