@@ -1,7 +1,7 @@
 /*************************************************************************
 **                                                                        
 **  MG-APP----Multi-GNSS-Automatic Precise Positioning Software          
-**  Copyright (C) 2016-2019 XiaoGongWei                                   
+**  Copyright (C) 2016-2020 XiaoGongWei
 **  This file is part of MG-APP.
 **
 **  GNU Lesser General Public License Usage
@@ -52,9 +52,10 @@
 **  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 **  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************************
-**           Author: XiaoGongWei                                          
-**  Website/Contact: http://github.com/xiaogongwei                        
-**             Date: 26.04.2019                                           
+**           Author: XiaoGongWei
+**   Website: github.com/xiaogongwei/MG_APP
+** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
+**             Date: 06.02.2020
 ****************************************************************************/
 
 #ifndef _QGLOBALDEF
@@ -90,8 +91,8 @@ using namespace Eigen;
 #define M_GM 3.986005e14 // Earth's gravitational constant (m)(old value:3.986005e14)
 #define M_GMK 398600.4415 // The Earth's Gravitational Constant (km)
 #define M_We 0.000072921151467 // Earth rotation angular velocity
-#define M_Re 6378136 // Reference ellipse length radius (m)
-#define M_ReK 6378.136 // Reference ellipse length radius (km)
+#define M_Re 6378137 // Reference ellipse length radius (m)
+#define M_ReK 6378.137 // Reference ellipse length radius (km)
 #define M_C20 -0.001082657 // The Second Harmonic Coefficient of Gravity Potential
 #define M_nan 1e-15
 #define M_Zgama_P_square  (3*3) // Deionospheric Composite P Code Variance

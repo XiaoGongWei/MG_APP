@@ -1,7 +1,7 @@
 /*************************************************************************
 **
 **  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2019 XiaoGongWei
+**  Copyright (C) 2016-2020 XiaoGongWei
 **  This file is part of MG-APP.
 **
 **  GNU Lesser General Public License Usage
@@ -33,8 +33,9 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**  Website/Contact: http://github.com/xiaogongwei
-**             Date: 26.04.2019
+**   Website: github.com/xiaogongwei/MG_APP
+** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
+**             Date: 06.02.2020
 ****************************************************************************/
 
 #ifndef QSPPMODEL_H

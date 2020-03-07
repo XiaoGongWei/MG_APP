@@ -47,9 +47,7 @@ bool QualityCtrl::VtPVCtrl_CLK(QVector < SatlitData > &epochSatlitData, double *
         }
     }
 
-    int a = 0;
     return ishasgross;
-
 }
 
 bool QualityCtrl::VtPVCtrl_CLKA(QVector < SatlitData > &epochSatlitData, double *predict_pos)
@@ -74,10 +72,7 @@ bool QualityCtrl::VtPVCtrl_CLKA(QVector < SatlitData > &epochSatlitData, double 
         Vct_L_CLK[i] = p - oneSatlit.PP3 + dlta;
     }
 
-    int a = 0;
-
     return ishasgross;
-
 }
 
 
@@ -483,50 +478,41 @@ void QualityCtrl::sort_vec(const VectorXd& vec, VectorXd& sorted_vec,  VectorXi&
   }
 }
 
-
 // get matrix B and observer L
 void QualityCtrl::Obtaining_equation(QVector< SatlitData > &currEpoch, double *ApproxRecPos, MatrixXd &mat_B, VectorXd &Vct_L, MatrixXd &mat_P, bool isSmoothRange)
 {
-    int epochLenLB = currEpoch.length();
-    MatrixXd B(epochLenLB, 4), P(epochLenLB, epochLenLB);
-    VectorXd L(epochLenLB);
-    B.setZero();
-    L.setZero();
-    P.setIdentity();
-
-    for (int i = 0; i < epochLenLB;i++)
-    {
-        SatlitData oneSatlit = currEpoch.at(i);
-        double li = 0,mi = 0,ni = 0,p0 = 0,dltaX = 0,dltaY = 0,dltaZ = 0;
-        dltaX = oneSatlit.X - ApproxRecPos[0];
-        dltaY = oneSatlit.Y - ApproxRecPos[1];
-        dltaZ = oneSatlit.Z - ApproxRecPos[2];
-        p0 = qSqrt(dltaX*dltaX+dltaY*dltaY+dltaZ*dltaZ);
-        li = dltaX/p0;mi = dltaY/p0;ni = dltaZ/p0;
-        //计算B矩阵
-        //P3伪距码矩阵
-        B(i, 0) = li;B(i, 1) = mi;B(i, 2) = ni; B(i, 3) = -1;
-        //计算L矩阵
-        double dlta = 0;//各项那个改正
-        dlta =  - oneSatlit.StaClock + oneSatlit.SatTrop - oneSatlit.Relativty -
-            oneSatlit.Sagnac - oneSatlit.TideEffect - oneSatlit.AntHeight;
-        //伪距码PP3
-        if(isSmoothRange)
-        {// add by xiaogongwei 2018.11.20
-            L(i) = p0 - oneSatlit.PP3_Smooth + dlta;
-            // 计算权阵P
-            P(i, i) = 1 / oneSatlit.PP3_Smooth_Q;//smooth伪距权????
-        }
-        else
-        {
-            L(i) = p0 - oneSatlit.PP3 + dlta;
-            // 计算权阵P
-            P(i, i) = oneSatlit.SatWight;//伪距权
-        }
-
-    }//B,L计算完毕
-    // save data to mat_B
-    mat_B = B;
-    Vct_L = L;
-    mat_P = P;
+	int epochLenLB = currEpoch.length();
+	MatrixXd B(epochLenLB, 4), P(epochLenLB, epochLenLB);
+	VectorXd L(epochLenLB);
+	B.setZero();
+	L.setZero();
+	P.setIdentity();
+	for (int i = 0; i < epochLenLB; i++)
+	{
+		SatlitData oneSatlit = currEpoch.at(i);
+		double li = 0, mi = 0, ni = 0, p0 = 0, dltaX = 0, dltaY = 0, dltaZ = 0;
+		dltaX = oneSatlit.X - ApproxRecPos[0];
+		dltaY = oneSatlit.Y - ApproxRecPos[1];
+		dltaZ = oneSatlit.Z - ApproxRecPos[2];
+		p0 = qSqrt(dltaX*dltaX + dltaY * dltaY + dltaZ * dltaZ);
+		li = dltaX / p0; mi = dltaY / p0; ni = dltaZ / p0;
+		B(i, 0) = li; B(i, 1) = mi; B(i, 2) = ni; B(i, 3) = -1;
+		double dlta = 0;
+		dlta = -oneSatlit.StaClock + oneSatlit.SatTrop - oneSatlit.Relativty -
+			oneSatlit.Sagnac - oneSatlit.TideEffect - oneSatlit.AntHeight;
+		if (isSmoothRange)
+		{// add by xiaogongwei 2018.11.20
+			L(i) = p0 - oneSatlit.PP3_Smooth + dlta;
+			P(i, i) = 1 / oneSatlit.PP3_Smooth_Q;
+		}
+		else
+		{
+			L(i) = p0 - oneSatlit.PP3 + dlta;
+			P(i, i) = oneSatlit.SatWight;
+		}
+	}
+	// save data to mat_B
+	mat_B = B;
+	Vct_L = L;
+	mat_P = P;
 }

@@ -693,6 +693,11 @@ void QSPPModel::Run(bool isDisplayEveryEpoch)
             if(epochSatlitData.length() < m_minSatFlag || spp_pos[0] == 0)
             {
                 prevEpochSatlitData.clear();
+                // set residual as zeros
+                for(int i = 0;i < epochSatlitData.length();i++)
+                {
+                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
+                }
                 // display clock jump
                 disPlayQTextEdit = "Valid Satellite Number: " + QString::number(epochSatlitData.length()) + ENDLINE +
                         "Waring: ***************Satellite number not sufficient*****************";
@@ -740,6 +745,11 @@ void QSPPModel::Run(bool isDisplayEveryEpoch)
             if(epochSatlitData.length() < m_minSatFlag)
             {
                 prevEpochSatlitData.clear();
+                // set residual as zeros
+                for(int i = 0;i < epochSatlitData.length();i++)
+                {
+                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
+                }
                 // display clock jump
                 disPlayQTextEdit = "Valid Satellite Number: " + QString::number(epochSatlitData.length()) + ENDLINE +
                         "Waring: ***************Satellite number not sufficient*****************";

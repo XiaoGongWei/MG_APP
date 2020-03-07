@@ -628,6 +628,8 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 SimpleSPP(prevEpochSatlitData, epochSatlitData, spp_pos);
             else
                 memcpy(spp_pos, m_ApproxRecPos, 3*sizeof(double));
+            if(!isnormal(spp_pos[0]))
+                memset(spp_pos, 0, 3*sizeof(double));
 
             // The number of skipping satellites is less than m_minSatFlag
             // update at 2018.10.17 for less m_minSatFlag satellites at the begin observtion
@@ -637,6 +639,11 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 {
                     prevEpochSatlitData.clear();// Exception reinitialization
                     continue_bad_epoch = 0;
+                }
+                // set residual as zeros
+                for(int i = 0;i < epochSatlitData.length();i++)
+                {
+                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
                 }
                 disPlayQTextEdit = "GPST: " + QString::number(epochTime.Hours) + ":" + QString::number(epochTime.Minutes)
                         + ":" + QString::number(epochTime.Seconds) ;
@@ -786,6 +793,11 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 {
                     prevEpochSatlitData.clear();// Exception reinitialization
                     continue_bad_epoch = 0;
+                }
+                // set residual as zeros
+                for(int i = 0;i < epochSatlitData.length();i++)
+                {
+                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
                 }
                 // display clock jump
                 disPlayQTextEdit = "Valid Satellite Number: " + QString::number(epochResultSatlitData.length()) + ENDLINE +

@@ -16,8 +16,11 @@ MainWindow::~MainWindow()
     if(m_mutiply_data.length() > 0)
         m_mutiply_data.clear();
     delete m_AboutAct;
-
     delete ui;
+}
+void MainWindow::closeEvent(QCloseEvent *e)
+{
+    exit(0);// exit all app processes and threads
 }
 
 void MainWindow::AboutApp()

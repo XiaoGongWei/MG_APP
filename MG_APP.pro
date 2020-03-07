@@ -101,5 +101,7 @@ FORMS += \
     mainwindow.ui
 
 DISTFILES += \
-    QtPPPGUI/README.me \
-    Licences/README.md
+    Licences/README.md \
+    Licences/THANKS \
+    Licences/COPYING \
+    QtPPPGUI/README.md
