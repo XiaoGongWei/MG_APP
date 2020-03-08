@@ -1,5 +1,5 @@
 **************************************************
-***************MG-APP THANKS file****************
+************** MG-APP THANKS file ****************
 **************************************************
 
 We would like to thank the IGS, CNES, and GFZ for 
@@ -17,16 +17,16 @@ Foundation of China (Nos. 41574015, 41974008,
 Programme of China Collaborative Precision 
 Positioning Project (No. 2016YFB0501900).
 We express our sincere gratitude to some software 
-listed below.
+listed below.  
 
-Software:
-Qt: <www.qt.io>
-Eigen: <eigen.tuxfamily.org>
-RTKLIB: <www.rtklib.com>
-QCustomPlot: <www.qcustomplot.com>
-
-Any suggestions, corrections, and comments on MG-APP
-sincerely welcomed contact with us.
+Software:  
+Qt: <www.qt.io>  
+Eigen: <eigen.tuxfamily.org>  
+RTKLIB: <www.rtklib.com>  
+QCustomPlot: <www.qcustomplot.com>  
+  
+Any suggestions, corrections, and comments on MG-APP  
+sincerely welcomed contact with us.  
 
 
 
