@@ -62,14 +62,18 @@ readAnt.getAllData();// read all data from satellites and receivers
 3. Function call method
 double E = 0.7,A = 0.3;// altitude Angle and azimuth Angle
 double L1Offset = 0, L2Offset = 0;// save the correction of L1 and L2 line of sight (unit m)
-readAnt.getRecvL12(E,A,&L1Offset,&L2Offset);// calculate the correction of L1 and L2 line of sight (unit m)
+QVector<QString> FrqFlag;//
+FrqFlag.append("C1C"); FrqFlag.append("L1C"); FrqFlag.append("C1W"); FrqFlag.append("L1W");
+readAnt.getRecvL12(E,A,&L1Offset,&L2Offset, FrqFlag);// calculate the correction of L1 and L2 line of sight (unit m)
 
 int Year = 2010,Month =  4,Day = 10,Hours = 0,Minuts = 0,PRN = 32;
 double Seconds = 0.0;
 double StaPos[3] = {9999,999,9999},RecPos[3] = {9999,9999,9999};
-double L12OffSet = 0;
-// time is UTC, month, year, day, hour and second, StaPos: satellite XYZ coordinate, RecPos: receiver XYZ coordinate, SatAntH: satellite antenna correction (since the PCO and PCV of each satellite antenna frequency are the same, it only needs to return a correction distance) to return m
-gL12OffSet = readAnt.getSatOffSet(Year,Month,Day,Hours,Minuts,Seconds,PRN,StaPos,RecPos);
+double L12OffSet[2] = {0};
+QVector<QString> FrqFlag;//
+FrqFlag.append("C1C"); FrqFlag.append("L1C"); FrqFlag.append("C1W"); FrqFlag.append("L1W");
+// time is GPS time, month, year, day, hour and second, StaPos: satellite XYZ coordinate, RecPos: receiver XYZ coordinate, SatAntH: satellite antenna correction (since the PCO and PCV of each satellite antenna frequency are the same, it only needs to return a correction distance) to return m
+readAnt.getSatOffSet(Year,Month,Day,Hours,Minuts,Seconds,PRN,StaPos,RecPos, L12OffSet, FrqFlag);
 
 */
 
