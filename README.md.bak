@@ -56,7 +56,7 @@ coordinates and high resolution tropospheric products.
 We also developed RTMG-PPP based on MG-APP. Below is the main window and the result of processing 10 hours of GNSS observations.  
    
 ![Main Window RTPPP](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/RTPPPmain.png)  
-![Main Window Results](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/ContrastRTPPP.png)  
+![Main Window Results](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/RTPPPmain.png)  
 
 
 
