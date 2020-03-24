@@ -128,7 +128,7 @@ void SRIFAlgorithm::initSRIFPara(QVector< SatlitData > &currEpoch,MatrixXd &B,Ve
 
     // juge is kinematic
     if(m_SRIF_MODEL == SRIF_MODEL::SPP_KINEMATIC || m_SRIF_MODEL == SRIF_MODEL::PPP_KINEMATIC)
-    {
+    {// for Kinematic
         m_Rwk(0,0) = 1e-2;
         m_Rwk(1,1) = 1e-2;
         m_Rwk(2,2) = 1e-2;
@@ -221,7 +221,7 @@ void SRIFAlgorithm::changeSRIFPara( QVector< SatlitData > &epochSatlitData,QVect
         m_Rwk(i,i) = 1e6;
     // juge is kinematic
     if(m_SRIF_MODEL == SRIF_MODEL::PPP_KINEMATIC)
-    {
+    {// for Kinematic
         m_Rwk(0,0) = 1e-2;
         m_Rwk(1,1) = 1e-2;
         m_Rwk(2,2) = 1e-2;

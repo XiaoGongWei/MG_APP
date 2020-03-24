@@ -152,7 +152,7 @@ void QKalmanFilter::initKalman(QVector< SatlitData > &currEpoch,MatrixXd &B,Vect
         break;
     }
     if(m_KALMAN_MODEL == KALMAN_MODEL::SPP_KINEMATIC || m_KALMAN_MODEL == KALMAN_MODEL::PPP_KINEMATIC)
-    {
+    {// for Kinematic
         m_Qwk_1(0,0) = 1000;
         m_Qwk_1(1,1) = 1000;
         m_Qwk_1(2,2) = 1000;
@@ -192,7 +192,7 @@ void QKalmanFilter::changeKalmanPara( QVector< SatlitData > &epochSatlitData,QVe
     m_Qwk_1.resize(m_const_param+epochLenLB,m_const_param+epochLenLB);
 	m_Qwk_1.setZero();
     if(m_KALMAN_MODEL == KALMAN_MODEL::PPP_KINEMATIC)
-    {
+    {// for Kinematic
         m_Qwk_1(0,0) = 1000;
         m_Qwk_1(1,1) = 1000;
         m_Qwk_1(2,2) = 1000;
@@ -246,7 +246,7 @@ void QKalmanFilter::changeKalmanPara( QVector< SatlitData > &epochSatlitData,QVe
 		}
 		else
 		{
-            m_Pk_1(n+m_const_param,n+m_const_param) = 1e6;
+            m_Pk_1(n+m_const_param,n+m_const_param) = 1e6;// for new satellite ambiguity
 //            for (int i = 0;i < m_const_param;i++)
 //            {
 //                m_Pk_1(n+m_const_param,i) = 1;
@@ -623,7 +623,6 @@ bool QKalmanFilter::KalmanforStatic(QVector< SatlitData > &preEpoch,QVector< Sat
         P.setIdentity();
         P = P * 1e10;
     }
-
 
     // update m_ApproxRecPos use kalman
     m_ApproxRecPos[0] = m_SPP_Pos[0] + m_Xk_1(0);

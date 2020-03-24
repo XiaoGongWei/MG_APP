@@ -11,7 +11,8 @@
  Date    : 26 Apr 2019  
  Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/    
  Old version (contains resources you may need): [https://github.com/XiaoGongWei/PPP](https://github.com/XiaoGongWei/PPP)   
- **If you would like to join this repository, please contact us after registering with Github.** 
+ **If you would like to join this repository, please contact us after registering with Github.**   
+ **Please use `git` clone or `git pull` to keep MG-APP up to date.** 
  
  
 ![Main Window](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/fig2.png)  
