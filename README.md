@@ -3,9 +3,11 @@
 
  Author  : Xiaogongwei
  
+           QQ Group: 258113285
            E-mail: <xiaogongwei10@163.com>
            My Github: https://github.com/XiaoGongWei
            My Blog: https://blog.csdn.net/xiaoxiao133
+
 	   
  Version : 1.0  
  Date    : 26 Apr 2019  
