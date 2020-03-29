@@ -544,7 +544,7 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
     QVector< MatrixXd > last_allSolverQ = myPPP->m_writeFileClass.allSloverQ;
     VectorXd last_fillter_X;
     MatrixXd last_fillter_Q;
-    for(int i = forWard_epoch_len - 1; i >=0; i++)
+    for(int i = forWard_epoch_len - 1; i >=0; i--)
     {
         last_fillter_X = last_allSolverX.at(i);
         if(last_fillter_X[0] != 0)
