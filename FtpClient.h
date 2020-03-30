@@ -53,18 +53,19 @@
 
 /*
 Example:
-FtpCLient clicent;
+FtpClient clicent;
 clicent.FtpSetUserInfor("david","xiaogongwei");//if you have account or anonymous
 clicent.FtpSetHostPort("127.0.0.1");
 clicent.FtpGet("/Documents/notify_minutes.txt", "./xiao_ftp.txt");
 clicent.FtpPut("./X_epoch_2879.csv", "/Documents/xiao_ftp.csv");
 */
 
-class FtpCLient:public QObject
+class FtpClient:public QObject
 {
     Q_OBJECT
 public:
-    FtpCLient();
+    FtpClient();
+    ~FtpClient();
     void FtpSetUserInfor(QString user, QString pwd);
     void FtpSetHostPort(QString host_str, int port = 21);
     bool FtpGet(QString net_file_path, QString local_file_path);

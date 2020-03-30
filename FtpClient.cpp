@@ -1,7 +1,7 @@
 #include "FtpClient.h"
 
 
-bool FtpCLient::downloadHTTPFile(QString net_file_path, QString local_file_path)
+bool FtpClient::downloadHTTPFile(QString net_file_path, QString local_file_path)
 {
     QEventLoop loop;
     QUrl tUrl = QUrl(net_file_path);
@@ -23,12 +23,12 @@ bool FtpCLient::downloadHTTPFile(QString net_file_path, QString local_file_path)
 
 /*
  * example:
- * FtpCLient myftp;
+ * FtpClient myftp;
  * char *json_data = "{\"datastreams\": [{\"id\": \"temp0\", \"datapoints\": [{\"at\": \"2019-06-22T10:55:18.889416\", \"value\": 0.12}]}]}";
  * QString put_url("http://api.heclouds.com/devices/531879860/datapoints");
  * myftp.pushData2Http(put_url, json_data);
 */
-bool FtpCLient::pushData2Http(QString http_url, char *json_format)
+bool FtpClient::pushData2Http(QString http_url, char *json_format)
 {
     QEventLoop loop;
     QUrl tUrl = QUrl(http_url);
@@ -44,7 +44,7 @@ bool FtpCLient::pushData2Http(QString http_url, char *json_format)
     return true;
 }
 
-void FtpCLient::http_finished()
+void FtpClient::http_finished()
 {
     QNetworkReply *pReply = qobject_cast<QNetworkReply *>(sender());
 //    QVariant status_code = pReply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
@@ -52,6 +52,8 @@ void FtpCLient::http_finished()
     switch (pReply->error())
     {
         case QNetworkReply::NoError:
+           m_pFile->write(pReply->readAll());
+           m_pFile->flush();
            qDebug()<< "Success!" << endl;
            break;
         case QNetworkReply::HostNotFoundError:
@@ -64,11 +66,12 @@ void FtpCLient::http_finished()
            qDebug()<< "Can not find this download File." << endl;
            break;
     }
+    if(m_pFile->isOpen()) m_pFile->close();
     pReply->deleteLater();
 }
 
 
-FtpCLient::FtpCLient()
+FtpClient::FtpClient()
 {
     m_pManager = new QNetworkAccessManager();
     m_pUrl = new QUrl();
@@ -76,7 +79,12 @@ FtpCLient::FtpCLient()
     m_isPush = true;
 }
 
-bool FtpCLient::isExistFile(QString file_path)
+FtpClient::~FtpClient()
+{
+
+}
+
+bool FtpClient::isExistFile(QString file_path)
 {
     if(QFile::exists(file_path))
         return true;
@@ -84,7 +92,7 @@ bool FtpCLient::isExistFile(QString file_path)
         return false;
 }
 
-void FtpCLient::ftp_error(QNetworkReply::NetworkError net_error)
+void FtpClient::ftp_error(QNetworkReply::NetworkError net_error)
 {
     m_isDownload = false;
     m_isPush = false;
@@ -105,7 +113,7 @@ void FtpCLient::ftp_error(QNetworkReply::NetworkError net_error)
      }
 }
 
-void FtpCLient::replay_finished()
+void FtpClient::replay_finished()
 {
     QNetworkReply *pReply = qobject_cast<QNetworkReply *>(sender());
     switch (pReply->error())
@@ -122,19 +130,19 @@ void FtpCLient::replay_finished()
 }
 
 //Set the FTP server username and password
-void FtpCLient::FtpSetUserInfor(QString user, QString pwd)
+void FtpClient::FtpSetUserInfor(QString user, QString pwd)
 {
     m_pUrl->setUserName(user);
     m_pUrl->setPassword(pwd);
 }
 //Set address and port
-void FtpCLient::FtpSetHostPort(QString host_str, int port )
+void FtpClient::FtpSetHostPort(QString host_str, int port )
 {
     m_pUrl->setHost(host_str);
     m_pUrl->setPort(port);
 }
 //download file
-bool FtpCLient::FtpGet(QString net_file_path, QString local_file_path)
+bool FtpClient::FtpGet(QString net_file_path, QString local_file_path)
 {
     m_isDownload = true;
     QEventLoop loop;
@@ -176,7 +184,7 @@ bool FtpCLient::FtpGet(QString net_file_path, QString local_file_path)
     return m_isDownload;
 }
 //upload files
-bool FtpCLient::FtpPut(QString local_file_path, QString net_file_path)
+bool FtpClient::FtpPut(QString local_file_path, QString net_file_path)
 {
     m_isPush = true;
     QEventLoop loop;
@@ -205,14 +213,14 @@ bool FtpCLient::FtpPut(QString local_file_path, QString net_file_path)
 }
 
 // Upload progress
-void FtpCLient::ftp_uploadProgress(qint64 bytesSent, qint64 bytesTotal)
+void FtpClient::ftp_uploadProgress(qint64 bytesSent, qint64 bytesTotal)
 {
     qDebug() << "Sent/Total is :" << bytesSent
               << "/" << bytesTotal <<endl;
 
 }
 // Download progress
-void FtpCLient::ftp_downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
+void FtpClient::ftp_downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 {
     qDebug() << "Received/Total is :" << bytesReceived
               << "/" << bytesTotal <<endl;

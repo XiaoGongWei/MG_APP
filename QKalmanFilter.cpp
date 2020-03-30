@@ -542,7 +542,11 @@ bool QKalmanFilter::KalmanforStatic(QVector< SatlitData > &preEpoch,QVector< Sat
 
     // Quality Control
     bool gross_LC = true;// false
-    int max_iter = 10;
+    int minSatNum = 5, max_iter = 10;
+    if(m_KALMAN_MODEL == KALMAN_MODEL::SPP_STATIC || m_KALMAN_MODEL == KALMAN_MODEL::PPP_STATIC)
+        minSatNum = 1;
+    else
+        minSatNum = 5;
     while(gross_LC)
     {
         // get B, wightP ,L
@@ -568,7 +572,7 @@ bool QKalmanFilter::KalmanforStatic(QVector< SatlitData > &preEpoch,QVector< Sat
         }
         // delete gross Errors
         int del_len = del_flag.length();
-        if(epochLenLB - del_len >= 1)
+        if(epochLenLB - del_len >= minSatNum)
         {
             for(int i = 0; i < del_len;i++)
                 currEpoch.remove(del_flag[i]);

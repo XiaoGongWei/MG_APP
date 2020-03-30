@@ -569,7 +569,11 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
 
     // Quality Control
     bool gross_LC = true;
-    int max_iter = 10;
+    int minSatNum = 5, max_iter = 10;
+    if(m_SRIF_MODEL == SRIF_MODEL::SPP_STATIC || m_SRIF_MODEL == SRIF_MODEL::PPP_STATIC)
+        minSatNum = 1;
+    else
+        minSatNum = 5;
 
     while(gross_LC)
     {
@@ -597,7 +601,7 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
         }
         // delete gross Errors
         int del_len = del_flag.length();
-        if(epochLenLB - del_len > 5)
+        if(epochLenLB - del_len >= minSatNum)
         {
             for(int i = 0; i < del_len;i++)
                 currEpoch.remove(del_flag[i]);

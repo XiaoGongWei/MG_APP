@@ -131,7 +131,7 @@ private:
     QTideEffect m_TideEffectClass;// tidal effects
     QKalmanFilter m_KalmanClass;// kalman filtering class
     SRIFAlgorithm m_SRIFAlgorithm;
-    FtpCLient ftpClient;// ftp Dowload
+    FtpClient ftpClient;// ftp Dowload
     QWrite2File m_writeFileClass;// write to the file class
     QualityCtrl m_qualityCtrl;// Quality control class
     QPseudoSmooth m_QPseudoSmooth;// smoothed Pesudorange

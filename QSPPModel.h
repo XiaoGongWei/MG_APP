@@ -140,7 +140,7 @@ private:
     QualityCtrl m_qualityCtrl;// Quality control class
     QPseudoSmooth m_QPseudoSmooth;// smoothed Pesudorange
     QReadGPSN m_QReadGPSN;// read nav data
-    FtpCLient ftpClient;// ftp Dowload
+    FtpClient ftpClient;// ftp Dowload
     // for save plot image
     QString m_save_images_path;
     bool m_iswritre_file;

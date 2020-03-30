@@ -151,7 +151,7 @@ private:
     QReadAnt m_ReadAntClass;// read antenna data class
     QWindUp m_WinUpClass;// phase unwinding
     QTideEffect m_TideEffectClass;// tidal effects
-    FtpCLient ftpClient;// ftp Dowload class
+    FtpClient ftpClient;// ftp Dowload class
     QualityCtrl m_qualityCtrl;// Quality control class
     QPseudoSmooth m_QPseudoSmooth;// smoothed Pesudorange
     // for save plot image
