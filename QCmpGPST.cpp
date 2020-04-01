@@ -471,7 +471,7 @@ int QCmpGPST::readerp(const char *file, erp_t *erp)
 	//trace(3,"readerp: file=%s\n",file);
 
 	if (!(fp=fopen(file,"r"))) {
-		//trace(2,"erp file open error: file=%s\n",file);
+        ErroTrace("QCmpGPST::readerp erp file open error.");
 		return 0;
 	}
 	while (fgets(buff,sizeof(buff),fp)) {
