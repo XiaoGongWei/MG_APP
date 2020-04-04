@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include "mainwindow.h"
+#include "QtMyTest.cpp"
 
 
 
@@ -9,6 +10,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    testMain();// test some classes and functions
 
     MainWindow wnd;
     wnd.show();

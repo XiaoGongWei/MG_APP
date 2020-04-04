@@ -12,8 +12,8 @@
  Date    : 26 Apr 2019  
  Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/    
  Old version (contains resources you may need): [https://github.com/XiaoGongWei/PPP](https://github.com/XiaoGongWei/PPP)   
- Qt online installers: [http://download.qt.io/archive/online_installers/](http://download.qt.io/archive/online_installers/ ) 
- Qt install executable (in china): [http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/](http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/)
+ Qt online installers: [http://download.qt.io/archive/online_installers/](http://download.qt.io/archive/online_installers/ )   
+ Qt install executable (in china): [http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/](http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/)     
 
  **If you would like to join this repository, please contact us after registering with Github.**   
  **Please use `git clone` or `git pull` to keep MG-APP up to date.** 

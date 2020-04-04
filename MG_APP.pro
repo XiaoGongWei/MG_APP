@@ -54,7 +54,8 @@ SOURCES += \
     QualityCtrl.cpp \
     QPseudoSmooth.cpp \
     QSPPModel.cpp \
-    QPPPBackSmooth.cpp
+    QPPPBackSmooth.cpp \
+    QtMyTest.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -104,4 +105,5 @@ DISTFILES += \
     Licences/README.md \
     Licences/THANKS \
     Licences/COPYING \
-    QtPPPGUI/README.md
+    QtPPPGUI/README.md \
+    README.md
