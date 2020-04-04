@@ -1,22 +1,24 @@
 
 #	MG-APP (Multi-GNSS-Automatic Precise Positioning software)
 
- Author  : Xiaogongwei
- 
+ Author  : Gongwei Xiao
+
            QQ Group: 258113285
            E-mail: <xiaogongwei10@163.com>
            My Github: https://github.com/XiaoGongWei
            My Blog: https://blog.csdn.net/xiaoxiao133
 
-	   
  Version : 1.0  
  Date    : 26 Apr 2019  
  Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/    
  Old version (contains resources you may need): [https://github.com/XiaoGongWei/PPP](https://github.com/XiaoGongWei/PPP)   
+ Qt online installers: [http://download.qt.io/archive/online_installers/](http://download.qt.io/archive/online_installers/ ) 
+ Qt install executable (in china): [http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/](http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/)
+
  **If you would like to join this repository, please contact us after registering with Github.**   
  **Please use `git clone` or `git pull` to keep MG-APP up to date.** 
- 
- 
+
+
 ![Main Window](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/fig2.png)  
 
 ## English:
@@ -51,13 +53,13 @@ convergence process of PPP, and reverse filtering can be used to provide precise
 coordinates and high resolution tropospheric products.  
 
  Have fun,  
- 
+
   Xiaogongwei  
-  
-  
+
+
 ## RTPPP:  
 We also developed RTMG-PPP based on MG-APP. Below is the main window and the result of processing 10 hours of GNSS observations.  
-   
+
 ![Main Window RTPPP](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/RTPPPmain.png)  
 ![Main Window Results](https://github.com/XiaoGongWei/MG_APPS/blob/master/resources/OtherFiles/ContrastRTPPP.png)  
 
@@ -67,11 +69,11 @@ We also developed RTMG-PPP based on MG-APP. Below is the main window and the res
 
  MG-APP are distributed under the terms of the version 3 of the GNU General  
  Public License (GPLv3).  See the file COPYING.  
- Copyright (C) 2016-2019 XiaoGongWei   
+ Copyright (C) 2016-2020 XiaoGongWei   
  Special licenses for commercial and other applications which  
  are not willing to accept the GNU General Public License  
  are available by contacting the author.  
- 
+
  
 
 
