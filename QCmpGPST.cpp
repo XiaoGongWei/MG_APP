@@ -106,7 +106,7 @@ void QCmpGPST::XYZ2BLH(double X,double Y,double Z,double *m_pBLH,double *ellipse
 	m_pBLH[2] = Z/qSin(Bi1) - N*(1 - ellipseCoeff[4]);
 }
 
-void QCmpGPST::XYZ2SAE(double X,double Y,double Z,double *m_pSAZ,double *PX)
+void QCmpGPST::XYZ2SAZ(double X,double Y,double Z,double *m_pSAZ,double *PX)
 {
 	double dx = X - PX[0];
 	double dy = Y - PX[1];
@@ -145,9 +145,9 @@ void QCmpGPST::XYZ2ENU(double X,double Y,double Z,double *m_pENU,double *PX)
 	m_pENU[2] = (qCos(B)*qCos(L)*dx + qCos(B)*qSin(L)*dy + qSin(B)*dz);
 }
 //XYZ ： Receiver approximate coordinates. m_SAZ（radian）Returned calculation result  PX station coordinates
-void QCmpGPST::XYZ2SAE(double *pXYZ,double *m_pSAZ,double *PX)
+void QCmpGPST::XYZ2SAZ(double *pXYZ,double *m_pSAZ,double *PX)
 {
-	XYZ2SAE(pXYZ[0],pXYZ[1],pXYZ[2],m_pSAZ,PX);
+    XYZ2SAZ(pXYZ[0],pXYZ[1],pXYZ[2],m_pSAZ,PX);
 }
 void QCmpGPST::XYZ2BLH(double *pXYZ,double *m_pBLH)
 {

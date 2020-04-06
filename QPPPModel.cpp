@@ -1205,7 +1205,7 @@ double QPPPModel::getRelativty(char SatType, double *pSatXYZ,double *pRecXYZ,dou
 void QPPPModel::getSatEA(double X,double Y,double Z,double *approxRecvXYZ,double *EA)
 {//Calculate EA//BUG occurs, because when calculating XYZ to BLH, L (earth longitude) is actually opposite when y < 0, x > 0.L = -atan(y/x) error should be L = -atan(-y/x)
     double pSAZ[3] = {0};
-    qCmpGpsT.XYZ2SAE(X,Y,Z,pSAZ,approxRecvXYZ);//BUG occurs
+    qCmpGpsT.XYZ2SAZ(X,Y,Z,pSAZ,approxRecvXYZ);//BUG occurs
     EA[0] = (MM_PI/2 - pSAZ[2])*360/(2*MM_PI);
     EA[1] = pSAZ[1]*360/(2*MM_PI);
 }

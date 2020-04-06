@@ -104,10 +104,10 @@ public:
     int getSatPRN(QString StaliteName);//Acquisition of satellite PRN
     int YearAccDay(int Year, int Month, int Day);//Calculate DOY
     double YMD2GPSTime(int Year,int Month,int Day,int Hours,int Minutes,double Seconds,int *WeekN = NULL, int *day = NULL);//YMD Change to GPST
-    void XYZ2SAE(double X,double Y,double Z,double *m_pSAZ,double *PX);//XYZ: Receiver approximate coordinates; m_SAZ (radian): Return calculation results; PX: station coordinates
+    void XYZ2SAZ(double X,double Y,double Z,double *m_pSAZ,double *PX);//XYZ: Receiver approximate coordinates; m_SAZ (radian): Return calculation results; PX: station coordinates
 	void XYZ2BLH(double X,double Y,double Z,double *m_pBLH,double *ellipseCoeff = NULL);
 	void XYZ2ENU(double X,double Y,double Z,double *m_pENU,double *PX);
-    void XYZ2SAE(double *pXYZ,double *m_pSAZ,double *PX);//XYZ: Receiver approximate coordinates; m_SAZ (radian): Return calculation results; PX: station coordinates
+    void XYZ2SAZ(double *pXYZ,double *m_pSAZ,double *PX);//XYZ: Receiver approximate coordinates; m_SAZ (radian): Return calculation results; PX: station coordinates
 	void XYZ2BLH(double *pXYZ,double *m_pBLH);
 	void XYZ2ENU(double *pXYZ,double *m_pENU,double *PX);
     double computeJD(int Year,int Month,int Day,int HoursInt=0,int Minutes=0,double Seconds=0);//Calculating Julian Day
