@@ -260,7 +260,7 @@ bool QTideEffect::readOCEANFile(QString  StationName,OCEANData &oceaData,QString
 	if (isReadOCEAN) return true;
 	OCEANData tempOCEANData;
 	tempOCEANData.isRead = false;
-	oceaData.isRead = false;
+    oceaData.isRead = false;
 	StationName = StationName.trimmed();//Eliminate the file name space, and the file name in the form of a space becomes empty
 	StationName = StationName.toUpper();
 	if (StationName.isEmpty())
@@ -301,14 +301,14 @@ bool QTideEffect::readOCEANFile(QString  StationName,OCEANData &oceaData,QString
 
 	//Skip header file
 	QString tempLine="";
-	while (!tempLine.contains("END"))
+    while (!tempLine.contains("END") && !m_readOCEANClass.atEnd())
 		tempLine = m_readOCEANClass.readLine();
 	//Read data start symbol（$$）
 	QString tempStationName;
 	while (!m_readOCEANClass.atEnd())
 	{
 		//2-6 per line is empty, it means the data will start "$$" and the length is 4
-		while (4 != tempLine.length())
+        while (0 != tempLine.trimmed().compare("$$"))
 		{
 			tempLine = m_readOCEANClass.readLine();
 			if (m_readOCEANClass.atEnd()) 
@@ -317,18 +317,20 @@ bool QTideEffect::readOCEANFile(QString  StationName,OCEANData &oceaData,QString
 				oceaData.isRead = false;
 				break;	
 			}
-		}
-			
-		//Read station data
-		tempLine = m_readOCEANClass.readLine();//Read header file line
-		if (m_readOCEANClass.atEnd()) 
-		{
-			isOCEANTide = false;
-			oceaData.isRead = false;
-			break;	
-		}
+        }
+        //Read station data Name
+        tempLine = m_readOCEANClass.readLine();//Read Station name line
 		tempStationName = tempLine.mid(2,4).trimmed().toUpper();
-		if (tempStationName != StationName) continue;
+        if (tempStationName != StationName){
+            tempLine = m_readOCEANClass.readLine();//Read line
+            if (m_readOCEANClass.atEnd())
+            {
+                isOCEANTide = false;
+                oceaData.isRead = false;
+                break;
+            }
+            continue;
+        }
 		//Find the station
 		tempOCEANData.StationName = tempStationName;
 		//Skip comments (can read station BLH, not read here)
@@ -347,10 +349,10 @@ bool QTideEffect::readOCEANFile(QString  StationName,OCEANData &oceaData,QString
 			}
 			tempLine = m_readOCEANClass.readLine();//Read comment
 		}
-		tempOCEANData.isRead = true;
+        tempOCEANData.isRead = true;
 		break;//Read out data
 	}
-	isReadOCEAN = true;//I have read the file and cannot be sure that the station was found.
+    isReadOCEAN = true;//I have read the file and cannot be sure that the station data was found.
 	oceaData = tempOCEANData;//save data
 	if (tempOCEANData.isRead = false)	isOCEANTide = false;
 	m_readOCEANClass.close();
@@ -361,7 +363,6 @@ bool QTideEffect::readOCEANFile(QString  StationName,OCEANData &oceaData,QString
 void QTideEffect::getOCEANTide(int Year,int Month,int Day,int Hours,int Minuts,double Seconds,double *pXYZ,double *pTideENU,QString StationName)
 {
 	pTideENU[0]=0;pTideENU[1]=0;pTideENU[2]=0;
-	if (!isOCEANTide)	return ;
 	if (!isReadOCEAN)
 		if (!readOCEANFile(StationName,m_OCEANData,m_OCEANFileName))
 			return ; 
