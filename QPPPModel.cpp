@@ -618,7 +618,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             for(int i = 0;i < epochSatlitData.length();i++)
                 epochSatlitData[i].UTCTime.epochNum = epoch_num;
 
-            if(epoch_num == 74)
+            if(epoch_num == 2471)
             {// Debug for epoch
                 //2018-12- 8 13: 4: 0.0000000
                 int a = 0;
@@ -870,7 +870,6 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             saveResult2Class(ENU_Vct, spp_vct, epochTime, epochResultSatlitData, epoch_num, &P);
             epoch_num++;//Increase in epoch
         }//End of multiple epochs.  (int n = 0; n < multepochSatlitData.length();n++)
-
 
         // clear multepochSatlitData
         multepochSatlitData.clear();
@@ -1577,8 +1576,8 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
     // save P matrix
     if(P)
         m_writeFileClass.allSloverQ.append(*P);
-//    else
-//        m_writeFileClass.allSloverQ.append(MatrixXd::Identity(10,10));
+    else
+        m_writeFileClass.allSloverQ.append(MatrixXd::Identity(32,32));
 }
 
 

@@ -190,7 +190,7 @@ typedef struct _RecivePos
     double dX;//X or E
     double dY;//Y or N
     double dZ;//Z or U
-    double spp_pos[3];
+    double spp_pos[3];// store spp pos(Kinematic) or appromix
     int totolEpochStalitNum;//Number of satellites in an epoch
     int Year;//year
     int Month;//moth

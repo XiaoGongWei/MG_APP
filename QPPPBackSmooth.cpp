@@ -1254,8 +1254,8 @@ void QPPPBackSmooth::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime ep
     // save P matrix
     if(P)
         m_writeFileClass.allSloverQ.prepend(*P);
-//    else
-//        m_writeFileClass.allSloverQ.prepend(MatrixXd::Identity(10,10));
+    else
+        m_writeFileClass.allSloverQ.prepend(MatrixXd::Identity(32,32));
 }
 
 

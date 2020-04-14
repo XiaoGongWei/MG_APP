@@ -1251,8 +1251,8 @@ void QSPPModel::saveResult2Class(VectorXd X, Vector3d spp_vct, GPSPosTime epochT
     // save P matrix
     if(P)
         m_writeFileClass.allSloverQ.append(*P);
-//    else
-//        m_writeFileClass.allSloverQ.append(MatrixXd::Identity(10,10));
+    else
+        m_writeFileClass.allSloverQ.append(MatrixXd::Identity(32,32));
 }
 
 

@@ -103,6 +103,7 @@ bool QWrite2File::writeRecivePos2Txt(QString fload_path, QString tempfileName)
     for (int i = 0;i <lenRecivePos;i++ )
     {
         RecivePos oneRecivePos = allReciverPos.at(i);
+        MatrixXd Qmat = allSloverQ.at(i);
         saveFileOut.setFieldWidth(10);
         saveFileOut<<i;
         saveFileOut.setFieldWidth(2);
@@ -162,6 +163,25 @@ bool QWrite2File::writeRecivePos2Txt(QString fload_path, QString tempfileName)
         saveFileOut<<"  ";
         saveFileOut.setFieldWidth(15);
         saveFileOut<<QString::number(oneRecivePos.dZ,'f',4);
+
+        // write pos zigama = sqrt(Q(i,i)), i=1,2,3
+        if(i == 2471)
+        {// Debug for epoch
+            //2018-12- 8 13: 4: 0.0000000
+            int a = 0;
+        }
+        saveFileOut.setFieldWidth(2);
+        saveFileOut<<"  ";
+        saveFileOut.setFieldWidth(15);
+        saveFileOut<<QString::number(sqrt(abs(Qmat(0,0))),'f',8);
+        saveFileOut.setFieldWidth(2);
+        saveFileOut<<"  ";
+        saveFileOut.setFieldWidth(15);
+        saveFileOut<<QString::number(sqrt(abs(Qmat(1,1))),'f',8);
+        saveFileOut.setFieldWidth(2);
+        saveFileOut<<"  ";
+        saveFileOut.setFieldWidth(15);
+        saveFileOut<<QString::number(sqrt(abs(Qmat(2,2))),'f',8);
         saveFileOut.setFieldWidth(2);
 
         saveFileOut<<endl;
