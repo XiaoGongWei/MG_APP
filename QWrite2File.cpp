@@ -165,11 +165,6 @@ bool QWrite2File::writeRecivePos2Txt(QString fload_path, QString tempfileName)
         saveFileOut<<QString::number(oneRecivePos.dZ,'f',4);
 
         // write pos zigama = sqrt(Q(i,i)), i=1,2,3
-        if(i == 2471)
-        {// Debug for epoch
-            //2018-12- 8 13: 4: 0.0000000
-            int a = 0;
-        }
         saveFileOut.setFieldWidth(2);
         saveFileOut<<"  ";
         saveFileOut.setFieldWidth(15);

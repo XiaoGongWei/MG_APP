@@ -582,7 +582,8 @@ void QReadOFile::ProcessCLPos(obsVarNamesVer3 epochSystem)
     }
     else if(epochSystem.SatType.contains("C", Qt::CaseInsensitive))
     {// BDS 1 7 6 or 2
-        frqenceStr[0] = "2"; frqenceStr[1] = "7"; frqenceStr[2] = "6"; frqenceStr[3] = "1";
+        // "2" -> "6" -> "7" is for BDS-III
+        frqenceStr[0] = "2"; frqenceStr[1] = "6"; frqenceStr[2] = "7"; frqenceStr[3] = "1";
         prioLen = 3;
         prioArry[0] = "I"; prioArry[1] = "Q"; prioArry[2] = "X";
     }
