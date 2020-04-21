@@ -289,7 +289,7 @@ GPT2Result QTropDelay::SassstaMDelay(double &ZHD,double &ZWD,double dmjd,double 
 {
 	GPT2Result m_PTe = getGPT2Model(dmjd,dlat,dlon,hell);
 	m_PTe.T +=273.15;//Convert to open Celsius
-	double f = 1 - 0.00266 * qCos(2 * dlat) - 0.00028 * hell/1000;
+    double f = 1 - 0.00266 * qCos(2 * dlat) - 0.00028 * hell/1000;
 	ZHD = 0.002277*m_PTe.p/f;
 	ZWD = 0.002277*(1255/m_PTe.T + 0.05)*m_PTe.e/f;
 	m_PTe.T -= 273.15;//Change to Chinese Celsius

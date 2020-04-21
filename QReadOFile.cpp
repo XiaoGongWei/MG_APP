@@ -645,8 +645,9 @@ void QReadOFile::ProcessCLPos(obsVarNamesVer3 epochSystem)
         for(int i = 0; i < prioLen;i++)
         {
             QString C1i = "C" + frqenceStr[3] + prioArry[i], L1i = "L" + frqenceStr[3] + prioArry[i];
+            QString C2i = "C" + frqenceStr[2] + prioArry[i], L2i = "L" + frqenceStr[2] + prioArry[i];
             int tempPos1 = -1, tempPos2 = -1;
-            // frequence 1
+            // If C2I is missing, use C1I instead
             // C1 L1
             tempPos1 = obsType.indexOf(C1i);// find pos of C1P etc
             tempPos2 = obsType.indexOf(L1i);// find pos of L1P etc
@@ -657,6 +658,18 @@ void QReadOFile::ProcessCLPos(obsVarNamesVer3 epochSystem)
                 // L1
                 ObsTypePos.L1Type.append(L1i);
                 ObsTypePos.L1Pos.append(tempPos2);
+            }
+            // If C6I is missing, use C7I instead
+            // C2 L2
+            tempPos1 = obsType.indexOf(C2i);// find pos of C2P etc
+            tempPos2 = obsType.indexOf(L2i);// find pos of L2P etc
+            if(tempPos1 != -1 && tempPos2 != -1)
+            {
+                ObsTypePos.C2Type.append(C2i);
+                ObsTypePos.C2Pos.append(tempPos1);
+                // L2
+                ObsTypePos.L2Type.append(L2i);
+                ObsTypePos.L2Pos.append(tempPos2);
             }
 
         }

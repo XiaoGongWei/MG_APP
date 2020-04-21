@@ -30,7 +30,7 @@ void MainWindow::AboutApp()
 
 void MainWindow::initWindow()
 {
-    m_station_path = "H:/MyGNSS/GNSSData/BDS3gen";// Default directory of observation files
+    m_station_path = "D:/Testdata/FH01205M.19O";// Default directory of observation files
 //    m_station_path = "/home/david/MySoft/TestData/single_Station/JFNG0020.18o";
     ui->textEdit_FilePath->setText(m_station_path);
     m_isRuned = false;

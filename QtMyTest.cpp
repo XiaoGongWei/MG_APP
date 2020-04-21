@@ -44,7 +44,7 @@ void testSplash()
 #ifdef _WIN32
         #include <windows.h>
         Sleep(1000);
-#elif
+#else
         sleep(1000);
 #endif
     }
@@ -87,7 +87,11 @@ void testFtpClient()
     for(int i = 0;i < 0;i++)
     {
         m_FtpClient.pushData2Http("http://127.0.0.1/testJSON.php", "{\"firstName\": \"Gongwei\", \"lastName\": \"Xiao\"}");
+#ifdef _WIN32
         Sleep(1000);
+#else
+        sleep(1000);
+#endif
     }
 
     int a = 0;

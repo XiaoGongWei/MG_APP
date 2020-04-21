@@ -618,7 +618,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             for(int i = 0;i < epochSatlitData.length();i++)
                 epochSatlitData[i].UTCTime.epochNum = epoch_num;
 
-            if(epoch_num == 2471)
+            if(epoch_num == 69)
             {// Debug for epoch
                 //2018-12- 8 13: 4: 0.0000000
                 int a = 0;

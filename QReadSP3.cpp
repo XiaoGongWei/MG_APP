@@ -260,7 +260,10 @@ void QReadSP3::readFileData2Vec(QStringList SP3FileNames)
 				}
 				tempLine = sp3file.readLine();//Read a row of coordinate data
 			}
-			m_allEpochData.append(epochData);//Save a file data
+            if (!m_allEpochData.empty() && m_allEpochData.back().GPSTime == epochData.GPSTime)
+                m_allEpochData.back() = epochData;//Replace equal GPSTime data
+            else
+                m_allEpochData.append(epochData);//Save a file data
 		}//End of reading file
 		sp3file.close();
 	}//for (int i = 0;i < SP3FileNames.length();i++)//Read multiple files at the end
