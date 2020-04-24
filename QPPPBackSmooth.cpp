@@ -100,6 +100,7 @@ void QPPPBackSmooth::setConfigure(QString Method, QString Satsystem, QString Tro
    {
        m_KalmanClass.setModel(QKalmanFilter::KALMAN_MODEL::PPP_KINEMATIC);// set Kinematic model
        m_SRIFAlgorithm.setModel(SRIFAlgorithm::SRIF_MODEL::PPP_KINEMATIC);
+       m_minSatFlag = 5;// Dynamic Settings 5 or 1???, Static Settings 1
    }
    else
    {
@@ -140,7 +141,7 @@ void QPPPBackSmooth::initVar()
     m_isInitSPP = false;
     m_save_images_path = "";
     m_iswritre_file = false;
-    m_minSatFlag = 4;// Dynamic Settings 5, Static Settings 1 in setConfigure()
+    m_minSatFlag = 5;// Dynamic Settings 5, Static Settings 1 in setConfigure()
     m_isSmoothRange = false;// Whether to use phase smoothing pseudorange for SPP
 }
 
@@ -570,18 +571,35 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
     QVector< QVector < SatlitData > > multepochSatlitData;//Store multiple epochs
     multepochSatlitData = last_allPPPSatlitData;// get all epoch data
     int all_epoch_len = multepochSatlitData.length();
+    int continue_bad_epoch = 0;
 //Back smooth Multiple epoch cycles
         for (int epoch_num = all_epoch_len - 1; epoch_num >= 0;epoch_num--)
         {
             QVector< SatlitData > epochSatlitData;//Temporary storage of uncalculated data for each epoch satellite
             epochSatlitData = multepochSatlitData.at(epoch_num);
             if(epochSatlitData.length() == 0) continue;
-            GPSPosTime epochTime = epochSatlitData.at(0).UTCTime;//Obtaining observation time（Each satellite in the epoch stores the observation time）
+            GPSPosTime epochTime;//Obtaining observation time（Each satellite in the epoch stores the observation time）
+            if(epochSatlitData.length() != 0)
+            {
+                epochTime = epochSatlitData.at(0).UTCTime;//Obtaining observation time（Each satellite in the epoch stores the observation time）
+                //Set the epoch of the satellite
+                for(int i = 0;i < epochSatlitData.length();i++)
+                    epochSatlitData[i].UTCTime.epochNum = epoch_num;
+            }
+            else
+            {
+                GPSPosTime epochTime_t;
+                epochTime_t.Year = last_allReciverPos.at(epoch_num).Year;epochTime_t.Month = last_allReciverPos.at(epoch_num).Month;
+                epochTime_t.Day = last_allReciverPos.at(epoch_num).Day;epochTime_t.Hours = last_allReciverPos.at(epoch_num).Hours;
+                epochTime_t.Minutes = last_allReciverPos.at(epoch_num).Minutes;epochTime_t.Seconds = last_allReciverPos.at(epoch_num).Seconds;
+                epochTime_t.TropZHD = 0.0; epochTime_t.epochNum = epoch_num;
+                epochTime = epochTime_t;
+            }
             //Set the epoch of the satellite
             for(int i = 0;i < epochSatlitData.length();i++)
                 epochSatlitData[i].UTCTime.epochNum = epoch_num;
 
-            if(epoch_num == 0)
+            if(epoch_num == 1216)
             {
                 int a = 0;
             }
@@ -594,9 +612,19 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
 
             // The number of skipping satellites is less than m_minSatFlag
             // update at 2018.10.17 for less m_minSatFlag satellites at the begain observtion
-            if(epochSatlitData.length() < m_minSatFlag || spp_pos[0] == 0)
+            if(epochSatlitData.length() < m_minSatFlag || temp_spp_pos[0] == 0)
             {
-//                prevEpochSatlitData.clear();
+                if(m_isKinematic&&continue_bad_epoch++ > 8)
+                {
+                    prevEpochSatlitData.clear();// Exception reinitialization
+                    continue_bad_epoch = 0;
+                }
+                // set residual as zeros
+                for(int i = 0;i < epochSatlitData.length();i++)
+                {
+                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
+                }
+
                 disPlayQTextEdit = "GPST: " + QString::number(epochTime.Hours) + ":" + QString::number(epochTime.Minutes)
                         + ":" + QString::number(epochTime.Seconds) ;
                 autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
@@ -614,8 +642,9 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
 
             // Choose solve method Kalman or SRIF
             MatrixXd P;
-            VectorXd X;//分别为dX,dY,dZ,dT(Zenith tropospheric residual),dVt(Receiver clock)，N1,N2...Nm(Ambiguity)[dx,dy,dz,dTrop,dClock,N1,N2,...Nn]
+            VectorXd X;//dX,dY,dZ,dT(Zenith tropospheric residual),dVt(Receiver clock)，N1,N2...Nm(Ambiguity)[dx,dy,dz,dTrop,dClock,N1,N2,...Nn]
             double spp_vct[3] = {0};// save pos before fillter
+            bool is_filter_good = false;
             X.resize(5+epochSatlitData.length());
             X.setZero();
             // use prior information
@@ -628,11 +657,22 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
             // store spp position
             spp_vct[0] = temp_spp_pos[0]; spp_vct[1] = temp_spp_pos[1]; spp_vct[2] = temp_spp_pos[2];
             if (!m_Solver_Method.compare("SRIF", Qt::CaseInsensitive))
-                m_SRIFAlgorithm.SRIFforStatic(prevEpochSatlitData,epochSatlitData,spp_pos,X,P);
+                is_filter_good = m_SRIFAlgorithm.SRIFforStatic(prevEpochSatlitData,epochSatlitData,spp_pos,X,P);
             else
-                m_KalmanClass.KalmanforStatic(prevEpochSatlitData,epochSatlitData,spp_pos,X,P);
+                is_filter_good = m_KalmanClass.KalmanforStatic(prevEpochSatlitData,epochSatlitData,spp_pos,X,P);
 //Save the last epoch satellite data
-            prevEpochSatlitData = epochSatlitData;
+            if(is_filter_good)
+            {
+                prevEpochSatlitData = epochSatlitData;
+                continue_bad_epoch = 0;
+            }
+            else
+            {
+                continue_bad_epoch++;
+                memset(spp_vct, 0, 3*sizeof(double));
+                memset(spp_pos, 0, 3*sizeof(double));
+                X.setZero();
+            }
 //Output calculation result(print result)
             // display every epoch results
             if(isDisplayEveryEpoch)
@@ -1255,7 +1295,7 @@ void QPPPBackSmooth::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime ep
     if(P)
         m_writeFileClass.allSloverQ.prepend(*P);
     else
-        m_writeFileClass.allSloverQ.prepend(MatrixXd::Identity(32,32));
+        m_writeFileClass.allSloverQ.prepend(MatrixXd::Identity(32,32) * 1e10);
 }
 
 

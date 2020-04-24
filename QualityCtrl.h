@@ -52,7 +52,7 @@ public:
     bool VtPVCtrl_CLK(QVector < SatlitData > &epochSatlitData, double *predict_pos, VectorXd &del_flag);
     bool VtPVCtrl_CLKA(QVector < SatlitData > &epochSatlitData, double *predict_pos);
     // mat_B * X = mat_L; mat_P; del_flag store delete erro flag
-    bool VtPVCtrl_Filter_LC(MatrixXd mat_B, VectorXd vec_L, VectorXd vec_X, VectorXd &del_flag, int sat_len);
+    bool VtPVCtrl_Filter_LC(MatrixXd mat_B, VectorXd vec_L, VectorXd vec_X, VectorXd &del_flag, int sat_len, double *LP_threshold = NULL);
     bool VtPVCtrl_Filter_C(MatrixXd mat_B, VectorXd vec_L, VectorXd vec_X, VectorXd &del_flag, int sat_len);
     bool VtPVCtrl_C(MatrixXd mat_B, VectorXd vec_L, MatrixXd mat_P, VectorXd &del_flag, int sat_len);
     bool VtPVCtrlA_C(MatrixXd mat_B, VectorXd vec_L, MatrixXd mat_P, VectorXd &del_flag, int sat_len);

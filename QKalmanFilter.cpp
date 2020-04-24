@@ -559,7 +559,16 @@ bool QKalmanFilter::KalmanforStatic(QVector< SatlitData > &preEpoch,QVector< Sat
         }
         else
         {
-            gross_LC = m_qualityCtrl.VtPVCtrl_Filter_LC(B, L, m_Xk_1, delate_LC, currEpoch.length());// QC for carrire and pesoderange
+            if(getModel() == KALMAN_MODEL::PPP_STATIC)
+            {
+                double LP_threshold[2] = {0.06, 10.0};
+                gross_LC = m_qualityCtrl.VtPVCtrl_Filter_LC(B, L, m_Xk_1, delate_LC, currEpoch.length(), LP_threshold);// QC for carrire and pesoderange
+            }
+            else
+            {
+                double LP_threshold[2] = {0.1, 10.0};
+                gross_LC = m_qualityCtrl.VtPVCtrl_Filter_LC(B, L, m_Xk_1, delate_LC, currEpoch.length(), LP_threshold);// QC for carrire and pesoderange
+            }
         }
         max_iter--;
         if(gross_LC == false || max_iter <= 0) break;

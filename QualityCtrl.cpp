@@ -99,36 +99,30 @@ bool QualityCtrl::VtPVCtrl_CLKA(QVector < SatlitData > &epochSatlitData, double 
  * -------------------------------------------------------------
  * reference: none (it just data processing experience).
  */
-bool QualityCtrl::VtPVCtrl_Filter_LC(MatrixXd mat_B, VectorXd vec_L, VectorXd vec_X, VectorXd &del_flag , int sat_len)
+bool QualityCtrl::VtPVCtrl_Filter_LC(MatrixXd mat_B, VectorXd vec_L, VectorXd vec_X, VectorXd &del_flag , int sat_len, double *LP_threshold)
 {//Detect only carrier gross errors
     VectorXd vec_V;
-    int vec_len = 2*sat_len;
     bool is_Gross_Error = false;
     // init VectorXd; If you ignore calculation speed, you can also use vec_X.setZero() or vec_V.setZero();
-    del_flag.resize(vec_len);
+    del_flag.resize(sat_len);
     del_flag.setZero();
     vec_V = mat_B * vec_X - vec_L;
-
-    // solver Zgama
-    VectorXd v1 = vec_V.head(sat_len), v2 = vec_V.tail(sat_len);
-    double v1_mean1 = v1.mean(), Zgama_square_L = 0.0, Zgama_L = 0.0;
-    for(int i = 0;i < sat_len; i++)
-    {
-        Zgama_square_L +=( (v1[i] - v1_mean1)* (v1[i] - v1_mean1) ) / (v1.size()-1);
-    }
-    Zgama_L = sqrt(Zgama_square_L);
     // judge is statify the threshold
-    VectorXd vec_V1_abs = v1.cwiseAbs(), vec_V2_abs = v2.cwiseAbs();
-    double v1_mean1_abs = vec_V1_abs.mean();
+    VectorXd vL3 = vec_V.head(sat_len), VC3 = vec_V.segment(sat_len, sat_len);
+    VectorXd vec_L3_abs = vL3.cwiseAbs(), vec_C3_abs = VC3.cwiseAbs();
+    double L_threshold = 0.10, P_threshold = 10.0;
+    if(LP_threshold)
+    {
+        L_threshold = LP_threshold[0]; P_threshold = LP_threshold[1];
+    }
     int delete_sat_num = 0;
     // find gross error
     for(int i = 0;i < sat_len; i++)
     {
-        bool bad_error = (vec_V1_abs[i] > 0.10 || vec_V2_abs[i] > 10.0 );// (vec_V_abs[i] > 3*Zgama_L && vec_V_abs[i] > 0.008) || (vec_V_abs[i] > 0.15)
+        bool bad_error = (vec_L3_abs[i] > L_threshold || vec_C3_abs[i] > P_threshold);// (vec_V_abs[i] > 3*Zgama_L && vec_V_abs[i] > 0.008) || (vec_V_abs[i] > 0.15)
         if(bad_error)// Carrier residual less than (3*Zgama_L&&0.08) and 15 cm 2019.05.05
         {
             del_flag[i] = 1;// use 1 to Delete indication
-            del_flag[i+sat_len] = 1;
             is_Gross_Error = true;
             delete_sat_num++;
         }
@@ -142,20 +136,21 @@ bool QualityCtrl::VtPVCtrl_Filter_LC(MatrixXd mat_B, VectorXd vec_L, VectorXd ve
         int max_flag1 = 0, max_flag2 = 0;
         for(int i = 0;i < 1;i++)
         {
-            vec_V1_abs.maxCoeff(&max_flag1);
-            vec_V2_abs.maxCoeff(&max_flag2);
-            if((vec_V1_abs[max_flag1] > 0.10))
+            vec_L3_abs.maxCoeff(&max_flag1);
+            vec_C3_abs.maxCoeff(&max_flag2);
+            if((vec_L3_abs[max_flag1] > L_threshold))
             {
-                del_flag[max_flag1] = 1; del_flag[max_flag1+sat_len] = 1;
-                vec_V1_abs[max_flag1] = -1;
+                del_flag[max_flag1] = 1;
+                is_Gross_Error = true;
+                vec_L3_abs[max_flag1] = -1;
             }
-            if((vec_V2_abs[max_flag2] > 10.0))
+            if((vec_C3_abs[max_flag2] > P_threshold))
             {
-                del_flag[max_flag2] = 1; del_flag[max_flag2+sat_len] = 1;
-                vec_V2_abs[max_flag2] = -1;
+                del_flag[max_flag2] = 1;
+                is_Gross_Error = true;
+                vec_C3_abs[max_flag2] = -1;
             }
         }
-        is_Gross_Error = true;
     }
 
     return is_Gross_Error;

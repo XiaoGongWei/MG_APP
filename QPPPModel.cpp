@@ -154,7 +154,7 @@ void QPPPModel::initVar()
     m_isRuned = false;
     m_save_images_path = "";
     m_iswritre_file = false;
-    m_minSatFlag = 4;// Dynamic Settings 4 or 1, Static Settings 1 in setConfigure()
+    m_minSatFlag = 5;// Dynamic Settings 5 or 1, Static Settings 1 in setConfigure()
     m_isSmoothRange = false;
     m_clock_jump_type = 0;
 }
@@ -658,10 +658,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 ENU_Vct.resize(param_len);
                 ENU_Vct.fill(0);
                 // debug by xiaogongwei 2019.02.21
-                MatrixXd P;
-                P.resize(param_len, param_len);
-                P.setZero();
-                saveResult2Class(ENU_Vct, spp_vct, epochTime, epochSatlitData, epoch_num, &P);
+                saveResult2Class(ENU_Vct, spp_vct, epochTime, epochSatlitData, epoch_num);
                 epoch_num++;
                 continue;
             }
@@ -809,10 +806,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 int param_len = 3*epochResultSatlitData.length() + 32;
                 ENU_Vct.resize(param_len);
                 ENU_Vct.fill(0);
-                MatrixXd P;
-                P.resize(param_len, param_len);
-                P.setZero();
-                saveResult2Class(ENU_Vct, spp_vct, epochTime, epochResultSatlitData, epoch_num, &P);
+                saveResult2Class(ENU_Vct, spp_vct, epochTime, epochResultSatlitData, epoch_num);
                 epoch_num++;
                 continue;
             }
@@ -1577,7 +1571,7 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
     if(P)
         m_writeFileClass.allSloverQ.append(*P);
     else
-        m_writeFileClass.allSloverQ.append(MatrixXd::Identity(32,32));
+        m_writeFileClass.allSloverQ.append(MatrixXd::Identity(32,32) * 1e10);
 }
 
 
