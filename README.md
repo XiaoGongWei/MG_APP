@@ -1,12 +1,12 @@
 
 #	MG-APP (Multi-GNSS-Automatic Precise Positioning software)
 
- Author  : Gongwei Xiao
+ Author:  **Gongwei Xiao**  
 
-           QQ Group: 258113285
-           E-mail: <xiaogongwei10@163.com>
-           My Github: https://github.com/XiaoGongWei
-           My Blog: https://blog.csdn.net/xiaoxiao133
+- QQ Group: **258113285**  
+- E-mail: xiaogongwei10@163.com
+- My Github: [https://github.com/xiaogongwei](https://github.com/xiaogongwei)  
+- My Blog: [xiaogongwei10.blog.csdn.net](https://xiaogongwei10.blog.csdn.net/)   
 
  Version : 1.0  
  Date    : 26 Apr 2019  
