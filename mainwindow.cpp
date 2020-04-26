@@ -30,7 +30,7 @@ void MainWindow::AboutApp()
 
 void MainWindow::initWindow()
 {
-    m_station_path = "H:/MyGNSS/GNSSData/MG_APP_assert";// Default directory of observation files
+    m_station_path = "C:/Users/xiaog/Desktop/TestData1";// Default directory of observation files
 //    m_station_path = "/home/david/MySoft/TestData/single_Station/JFNG0020.18o";
     ui->textEdit_FilePath->setText(m_station_path);
     m_isRuned = false;

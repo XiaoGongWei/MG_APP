@@ -599,7 +599,7 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
             for(int i = 0;i < epochSatlitData.length();i++)
                 epochSatlitData[i].UTCTime.epochNum = epoch_num;
 
-            if(epoch_num == 1216)
+            if(epoch_num == 1844)
             {
                 int a = 0;
             }
@@ -607,6 +607,7 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
             double temp_spp_pos[3] = {last_allReciverPos.at(epoch_num).spp_pos[0],
                                       last_allReciverPos.at(epoch_num).spp_pos[1],
                                       last_allReciverPos.at(epoch_num).spp_pos[2]};
+            memcpy(spp_pos, temp_spp_pos, 3*sizeof(double));
             //Monitor satellite quality and cycle slip
             getGoodSatlite(prevEpochSatlitData,epochSatlitData, m_CutAngle);
 
@@ -669,8 +670,8 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
             else
             {
                 continue_bad_epoch++;
-                memset(spp_vct, 0, 3*sizeof(double));
                 memset(spp_pos, 0, 3*sizeof(double));
+                memset(spp_vct, 0, 3*sizeof(double));
                 X.setZero();
             }
 //Output calculation result(print result)
