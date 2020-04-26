@@ -14,7 +14,7 @@
  Old version (contains resources you may need): [https://github.com/XiaoGongWei/PPP](https://github.com/XiaoGongWei/PPP)   
  Qt online installers: [http://download.qt.io/archive/online_installers/](http://download.qt.io/archive/online_installers/ )   
  Qt install executable (in china): [http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/](http://mirrors.ustc.edu.cn/qtproject/official_releases/qt/)   
-Temporary link to Online MG-APP: http://13018096950.wicp.vip   
+Temporary link to Online MG-APP: https://13018096950.hskyun.com   
 
  **If you would like to join this repository, please contact us after registering with Github.**   
  **Please use `git clone` or `git pull` to keep MG-APP up to date.** 
