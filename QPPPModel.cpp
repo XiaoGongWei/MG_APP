@@ -42,6 +42,13 @@ QPPPModel::QPPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method,
     tempFilters.clear();
     tempFilters.append("*.clk");
     ClkFileNamesList = searchFilterFile(m_run_floder, tempFilters);
+    // if not find clk try clk_*
+    if(ClkFileNamesList.isEmpty())
+    {
+        tempFilters.clear();
+        tempFilters.append("*.clk_*");
+        ClkFileNamesList = searchFilterFile(m_run_floder, tempFilters);
+    }
     // find erp files
     tempFilters.clear();
     tempFilters.append("*.erp");
@@ -644,6 +651,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 //2018-12- 8 13: 4: 0.0000000
                 int a = 0;
             }
+            qDebug() << epoch_num;
             // use spp compute postion and smooth pesudorange
             if(!isInitSpp || m_isKinematic)
                 SimpleSPP(prevEpochSatlitData, epochSatlitData, spp_pos);
