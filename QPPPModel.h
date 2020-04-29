@@ -64,6 +64,8 @@
 #include <QTime>
 #include <QCoreApplication>
 
+#include "QRTWrite2File.h"
+
 // use ionospheric free PPP model
 class QPPPModel:public QBaseObject
 {
@@ -160,6 +162,9 @@ private:
     int m_clock_jump_type;// 1 is Pseudo range jump, 2 is carrier jump
     // min flag
     int m_minSatFlag;// the minimum number of satellites required
+    // add Real time write file
+    QRTWrite2File m_QRTWrite2File;
+    bool m_IS_MAX_OBS;// If the observed file is greater than 200MB write the file in real time
 };
 
 #endif // QPPPMODEL_H

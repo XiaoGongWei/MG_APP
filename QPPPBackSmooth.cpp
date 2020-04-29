@@ -582,18 +582,14 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
             if(epochSatlitData.length() != 0)
             {
                 epochTime = epochSatlitData.at(0).UTCTime;//Obtaining observation time（Each satellite in the epoch stores the observation time）
+                epochTime.epochNum = epoch_num;
                 //Set the epoch of the satellite
                 for(int i = 0;i < epochSatlitData.length();i++)
                     epochSatlitData[i].UTCTime.epochNum = epoch_num;
             }
             else
             {
-                GPSPosTime epochTime_t;
-                epochTime_t.Year = last_allReciverPos.at(epoch_num).Year;epochTime_t.Month = last_allReciverPos.at(epoch_num).Month;
-                epochTime_t.Day = last_allReciverPos.at(epoch_num).Day;epochTime_t.Hours = last_allReciverPos.at(epoch_num).Hours;
-                epochTime_t.Minutes = last_allReciverPos.at(epoch_num).Minutes;epochTime_t.Seconds = last_allReciverPos.at(epoch_num).Seconds;
-                epochTime_t.TropZHD = 0.0; epochTime_t.epochNum = epoch_num;
-                epochTime = epochTime_t;
+                epochTime = last_allReciverPos.at(epoch_num).UTCtime;
             }
             //Set the epoch of the satellite
             for(int i = 0;i < epochSatlitData.length();i++)
@@ -1231,9 +1227,8 @@ void QPPPBackSmooth::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime ep
 {
     //Store coordinate data
     RecivePos epochRecivePos;
-    epochRecivePos.Year = epochTime.Year;epochRecivePos.Month = epochTime.Month;
-    epochRecivePos.Day = epochTime.Day;epochRecivePos.Hours = epochTime.Hours;
-    epochRecivePos.Minutes = epochTime.Minutes;epochRecivePos.Seconds = epochTime.Seconds;
+    epochTime.epochNum = epochNum;
+    epochRecivePos.UTCtime = epochTime;
 
     epochRecivePos.totolEpochStalitNum = epochResultSatlitData.length();
     epochRecivePos.dX = X[0];
@@ -1248,9 +1243,7 @@ void QPPPBackSmooth::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime ep
     int const_num = 4 + m_sys_num;
     if(epochResultSatlitData.length() >= m_minSatFlag) epoch_ZHD = epochResultSatlitData.at(0).UTCTime.TropZHD;
     ClockData epochRecClock;
-    epochRecClock.UTCTime.epochNum = epochNum;
-    epochRecClock.UTCTime.Year = epochRecivePos.Year;epochRecClock.UTCTime.Month = epochRecivePos.Month;epochRecClock.UTCTime.Day = epochRecivePos.Day;
-    epochRecClock.UTCTime.Hours = epochRecivePos.Hours;epochRecClock.UTCTime.Minutes = epochRecivePos.Minutes;epochRecClock.UTCTime.Seconds = epochRecivePos.Seconds;
+    epochRecClock.UTCTime= epochRecivePos.UTCtime;
     epochRecClock.ZTD_W = X(3) + epoch_ZHD;//Storage zenith wet delay + zenith dry delay
     // save clock
     memset(epochRecClock.clockData, 0, 6*sizeof(double));

@@ -110,27 +110,27 @@ bool QWrite2File::writeRecivePos2Txt(QString fload_path, QString tempfileName)
         saveFileOut<<": ";
         //Output year, month, day, hour, minute, second
         saveFileOut.setFieldWidth(4);
-        saveFileOut<<QString::number(oneRecivePos.Year);
+        saveFileOut<<QString::number(oneRecivePos.UTCtime.Year);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<"-";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(oneRecivePos.Month);
+        saveFileOut<<QString::number(oneRecivePos.UTCtime.Month);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<"-";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(oneRecivePos.Day);
+        saveFileOut<<QString::number(oneRecivePos.UTCtime.Day);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<" ";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(oneRecivePos.Hours);
+        saveFileOut<<QString::number(oneRecivePos.UTCtime.Hours);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<":";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(oneRecivePos.Minutes);
+        saveFileOut<<QString::number(oneRecivePos.UTCtime.Minutes);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<":";
         saveFileOut.setFieldWidth(10);
-        saveFileOut<<QString::number(oneRecivePos.Seconds,'f',7);
+        saveFileOut<<QString::number(oneRecivePos.UTCtime.Seconds,'f',7);
 
         //Calculate dE dN dU
         saveFileOut.setFieldWidth(15);
@@ -190,6 +190,9 @@ bool QWrite2File::writeRecivePos2Txt(QString fload_path, QString tempfileName)
 bool QWrite2File::writePPP2Txt(QString fload_path, QString tempfileName)
 {
 
+    int all_epoch_ppp_len = allPPPSatlitData.length();
+    if (0 == all_epoch_ppp_len) return false;
+
     if(!isDirExist(fload_path))
     {
         QString infor = "can not construct floder: " + fload_path;
@@ -206,8 +209,6 @@ bool QWrite2File::writePPP2Txt(QString fload_path, QString tempfileName)
     }
     QTextStream saveFileOut(&saveFile);
 
-    int all_epoch_ppp_len = allPPPSatlitData.length();
-    if (0 == all_epoch_ppp_len) return false;
     for (int i = 0;i < all_epoch_ppp_len;i++)
     {
         QVector < SatlitData > epochSatlite = allPPPSatlitData.at(i);
@@ -225,27 +226,27 @@ bool QWrite2File::writePPP2Txt(QString fload_path, QString tempfileName)
         saveFileOut<<StallitNumbers;
         saveFileOut<<",(yyyy-mm-dd-hh-mm-ss):";
         saveFileOut.setFieldWidth(4);
-        saveFileOut<<QString::number(recvPos.Year);
+        saveFileOut<<QString::number(recvPos.UTCtime.Year);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<"-";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(recvPos.Month);
+        saveFileOut<<QString::number(recvPos.UTCtime.Month);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<"-";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(recvPos.Day);
+        saveFileOut<<QString::number(recvPos.UTCtime.Day);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<" ";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(recvPos.Hours);
+        saveFileOut<<QString::number(recvPos.UTCtime.Hours);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<":";
         saveFileOut.setFieldWidth(2);
-        saveFileOut<<QString::number(recvPos.Minutes);
+        saveFileOut<<QString::number(recvPos.UTCtime.Minutes);
         saveFileOut.setFieldWidth(1);
         saveFileOut<<":";
         saveFileOut.setFieldWidth(10);
-        saveFileOut<<QString::number(recvPos.Seconds, 'f', 7);
+        saveFileOut<<QString::number(recvPos.UTCtime.Seconds, 'f', 7);
         saveFileOut.setFieldWidth(6);
         saveFileOut<<",ztd:";
         saveFileOut<<endl;

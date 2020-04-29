@@ -192,12 +192,7 @@ typedef struct _RecivePos
     double dZ;//Z or U
     double spp_pos[3];// store spp pos(Kinematic) or appromix
     int totolEpochStalitNum;//Number of satellites in an epoch
-    int Year;//year
-    int Month;//moth
-    int Day;//day
-    int Hours;//hour
-    int Minutes;//minutes
-    double Seconds;//seconds
+    GPSPosTime UTCtime;
 }RecivePos;
 
 typedef struct _MWLLP
@@ -228,7 +223,8 @@ typedef struct _SatlitData
     int PRN;// Satellite PRN
     char SatType;// Satellite type
     GPSPosTime UTCTime;// Time stored in minutes and seconds, month, day, year, not necessarily UTC time
-    int EpochFlag;// Each epoch state (generally not 0:OK 1: power error of the first and second epoch. >1: unknown error)
+    int EpochFlag;// Each epoch state (generally not 0:OK 1: power error of the first and second epoch.
+                  // 777: getGoodSatlite() bad!, 888: SPP bad, 999 filter bad)
     int LL1_LOCK;// (rarely or hardly used: satellite signal out of lock or cycle-skip signal 0: OK or unknow. > : maybe ambiguity/Slip)
     int SigInten;// Satellite status signal (generally not used; -1:unknow, Signal intensity range:1-9. If EpochFlag>0 and EpochFlag < 3 can't use)
     double L1;// (cycle)
@@ -237,6 +233,22 @@ typedef struct _SatlitData
     double C1;// Store P1 or C1(m)
     double C2;// Store P2 or C2(m)
     double C3;// Store P3 or C3(m)
+    // uncombination variable
+    double LL1;// unEliminate ionospheric carrier (m)!!!!
+    double CC1;// unElimination of ionospheric pseudo-distance (m)
+    double LL2;// unEliminate ionospheric carrier (m)!!!!
+    double CC2;// unElimination of ionospheric pseudo-distance (m)
+    double VL1;// Filtering residue of LL1 (m)
+    double VC1;// Filtering residue of CC1 (m)
+    double VL2;// Filtering residue of LL2 (m)
+    double VC2;// Filtering residue of CC2 (m)
+    double CC1_Smooth;// Phase smoothing pseudo-distance (m)
+    double CC2_Smooth;// Phase smoothing pseudo-distance (m)
+    double CC1_Smooth_Q; // The covariance of PP3_Smooth
+    double CC2_Smooth_Q; // The covariance of PP3_Smooth; Note:smooth number use PP3_Smooth_NUM
+    double ionL1;// Calculated L1 ionospheric delay (m)
+
+    // combination variable
     double LL3;// Eliminate ionospheric carrier (m)!!!!
     double PP3;// Elimination of ionospheric pseudo-distance (m)
     double VLL3;// Filtering residue of LL3 (m)
@@ -244,6 +256,12 @@ typedef struct _SatlitData
     double PP3_Smooth;// Phase smoothing pseudo-distance (m)
     double PP3_Smooth_NUM;// Phase smoothing pseudo-distance number
     double PP3_Smooth_Q; // The covariance of PP3_Smooth
+
+    // Ambiguity and ion
+    double Amb1;// Ambiguity (stored in Amb for both integer and floating point Numbers of L1)
+    double Amb2;// Ambiguity (stored in Amb for both integer and floating point Numbers of L2)
+    double Amb;// Ambiguity (stored in Amb for both integer and floating point Numbers Of Ion_free LL3)
+    // others correction
     QVector< QString > wantObserType;// Store the observed value type corresponding to the read dual-frequency (store order as C1, L1, C2, L2)
     QVector< double > obserValue;// Observation data corresponding to obserType
     QVector< QString > obserType;// Observation types (Rinex_2: C1, L1, D1, S1, C2, L2, etc. Rinex_3: C1C, L1C, S1C, C2W, L2W, etc.)
@@ -257,6 +275,7 @@ typedef struct _SatlitData
     double Relativty;// Relativistic correction (m)
     double Sagnac;// Correction of earth autobiography (m)
     double StaClock;// Satellite clock difference (m)
+    double StaClockRate;// Satellite clock difference (m/s)
     double SatTrop;// Signal direction tropospheric dry delay correction(ZPD) (m)
     double StaTropMap;// The wet projection function of the troposphere(mf)
     double AntHeight;// Correction of Antenna Height (m)

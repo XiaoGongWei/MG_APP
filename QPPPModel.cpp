@@ -124,7 +124,6 @@ void QPPPModel::setConfigure(QString Method, QString Satsystem, QString TropDela
        m_minSatFlag = 1;// Dynamic Settings 1, Static Settings 1
    }
 
-
    if("Smooth" == Smooth_Str)
    {
        m_KalmanClass.setSmoothRange(QKalmanFilter::KALMAN_SMOOTH_RANGE::SMOOTH);
@@ -137,6 +136,8 @@ void QPPPModel::setConfigure(QString Method, QString Satsystem, QString TropDela
        m_SRIFAlgorithm.setSmoothRange(SRIFAlgorithm::SRIF_SMOOTH_RANGE::NO_SMOOTH);
        m_isSmoothRange = false;
    }
+
+   if(m_IS_MAX_OBS) m_QRTWrite2File.setPPPModel(PPP_MODEL::PPP_Combination);
    m_isKinematic = isKinematic;
 }
 
@@ -157,12 +158,28 @@ void QPPPModel::initVar()
     m_minSatFlag = 5;// Dynamic Settings 5 or 1, Static Settings 1 in setConfigure()
     m_isSmoothRange = false;
     m_clock_jump_type = 0;
+    m_IS_MAX_OBS = false;
 }
 
 //Constructor
 void QPPPModel::initQPPPModel(QString OFileName,QStringList Sp3FileNames,QStringList ClkFileNames,QString ErpFileName,QString BlqFileName,QString AtxFileName,QString GrdFileName)
 {
     if(!m_haveObsFile) return ;// if not have observation file.
+    // get OBS file size
+    QFileInfo obs_info(OFileName);
+    double obsMB = (double)(obs_info.size())/(1024.0*1024.0);
+    if(obsMB > 200) m_IS_MAX_OBS = true;
+    // init QRTWrite2File class
+    if(m_IS_MAX_OBS)
+    {
+        QDir tempDir(m_run_floder);
+        QString floder_name = "Products_" + m_Solver_Method + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
+        if(m_isKinematic)
+            floder_name = "Products_" + m_Solver_Method + "_Kinematic_" + m_sys_str +PATHSEG;
+        QString RTwriteFloder = tempDir.absoluteFilePath(floder_name);
+        m_QRTWrite2File.setSaveFloder(RTwriteFloder);
+    }
+
 //Set up multi-system data
 //Initial various classes
     m_ReadSP3Class.setSP3FileNames(Sp3FileNames);
@@ -613,10 +630,14 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             if(epochSatlitData.length() == 0) continue;
             GPSPosTime epochTime;
             if(epochSatlitData.length() > 0)
+            {
                 epochTime= epochSatlitData.at(0).UTCTime;//Obtain the observation time (the epoch stores the observation time for each satellite)
+                epochTime.epochNum = epoch_num;
+            }
             //Set the epoch of the satellite
             for(int i = 0;i < epochSatlitData.length();i++)
                 epochSatlitData[i].UTCTime.epochNum = epoch_num;
+
 
             if(epoch_num == 69)
             {// Debug for epoch
@@ -877,7 +898,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
         autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
     }
 //Write result to file
-    writeResult2File();
+    if(!m_IS_MAX_OBS) writeResult2File();
     m_isRuned = true;// Determine whether the operation is complete.
 }
 
@@ -1506,9 +1527,8 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
 {
     //Store coordinate data
     RecivePos epochRecivePos;
-    epochRecivePos.Year = epochTime.Year;epochRecivePos.Month = epochTime.Month;
-    epochRecivePos.Day = epochTime.Day;epochRecivePos.Hours = epochTime.Hours;
-    epochRecivePos.Minutes = epochTime.Minutes;epochRecivePos.Seconds = epochTime.Seconds;
+    epochTime.epochNum = epochNum;
+    epochRecivePos.UTCtime = epochTime;
 
     epochRecivePos.totolEpochStalitNum = epochResultSatlitData.length();
     epochRecivePos.dX = X[0];
@@ -1517,15 +1537,13 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
     epochRecivePos.spp_pos[0] = spp_vct[0];
     epochRecivePos.spp_pos[1] = spp_vct[1];
     epochRecivePos.spp_pos[2] = spp_vct[2];
-    m_writeFileClass.allReciverPos.append(epochRecivePos);
+    if(!m_IS_MAX_OBS) m_writeFileClass.allReciverPos.append(epochRecivePos);
     //Save wet delay and receiver clock error
     double epoch_ZHD = 0.0;
     int const_num = 4 + m_sys_num;
     if(epochResultSatlitData.length() >= m_minSatFlag) epoch_ZHD = epochResultSatlitData.at(0).UTCTime.TropZHD;
     ClockData epochRecClock;
-    epochRecClock.UTCTime.epochNum = epochNum;
-    epochRecClock.UTCTime.Year = epochRecivePos.Year;epochRecClock.UTCTime.Month = epochRecivePos.Month;epochRecClock.UTCTime.Day = epochRecivePos.Day;
-    epochRecClock.UTCTime.Hours = epochRecivePos.Hours;epochRecClock.UTCTime.Minutes = epochRecivePos.Minutes;epochRecClock.UTCTime.Seconds = epochRecivePos.Seconds;
+    epochRecClock.UTCTime= epochRecivePos.UTCtime;
     epochRecClock.ZTD_W = X(3) + epoch_ZHD;//Storage wet delay + dry delay
     // save clock
     memset(epochRecClock.clockData, 0, 6*sizeof(double));
@@ -1549,7 +1567,7 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
             break;
         }
     }
-    m_writeFileClass.allClock.append(epochRecClock);
+    if(!m_IS_MAX_OBS) m_writeFileClass.allClock.append(epochRecClock);
     //Save satellite ambiguity
     Ambiguity oneSatAmb;
     for (int i = 0;i < epochResultSatlitData.length();i++)
@@ -1559,19 +1577,57 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
         oneSatAmb.SatType = oneSat.SatType;
         oneSatAmb.UTCTime = epochRecClock.UTCTime;
         oneSatAmb.isIntAmb = false;
+//        memcpy(oneSatAmb.EA, oneSat.EA, 2*sizeof(double));
+//        oneSatAmb.ionL1 = 0.0;
+//        oneSatAmb.Amb1 = 0.0;
+//        oneSatAmb.Amb2 = 0.0;
         oneSatAmb.Amb = X(i+const_num);
-        oneSatAmb.UTCTime.epochNum = epochNum;
-        m_writeFileClass.allAmbiguity.append(oneSatAmb);
+        epochResultSatlitData[i].ionL1 = 0.0;
+        epochResultSatlitData[i].Amb1 = 0.0;
+        epochResultSatlitData[i].Amb2 = 0.0;
+        epochResultSatlitData[i].Amb = X(i+const_num);
+//        oneSatAmb.UTCTime.epochNum = epochNum;
+        if(!m_IS_MAX_OBS) m_writeFileClass.allAmbiguity.append(oneSatAmb);
+
     }
     // save used satlite Information
-    m_writeFileClass.allPPPSatlitData.append(epochResultSatlitData);
+    if(!m_IS_MAX_OBS) m_writeFileClass.allPPPSatlitData.append(epochResultSatlitData);
     // save solver X
-    m_writeFileClass.allSolverX.append(X);
+    if(!m_IS_MAX_OBS) m_writeFileClass.allSolverX.append(X);
     // save P matrix
-    if(P)
-        m_writeFileClass.allSloverQ.append(*P);
-    else
-        m_writeFileClass.allSloverQ.append(MatrixXd::Identity(32,32) * 1e10);
+    if(!m_IS_MAX_OBS)
+    {
+        if(P)
+            m_writeFileClass.allSloverQ.append(*P);
+        else
+            m_writeFileClass.allSloverQ.append(MatrixXd::Identity(32,32) * 1e10);
+    }
+
+    // Real time write to file add by xiaogongwei 2019.09.24
+    if(m_IS_MAX_OBS)
+    {
+        if(P)
+            m_QRTWrite2File.writeRecivePos2Txt(epochRecivePos, P);
+        else
+        {
+            MatrixXd tempP = MatrixXd::Identity(32,32) * 1e10;
+            m_QRTWrite2File.writeRecivePos2Txt(epochRecivePos, &tempP);
+        }
+        m_QRTWrite2File.writePPP2Txt(epochResultSatlitData);
+        m_QRTWrite2File.writeClockZTDW2Txt(epochRecClock);
+
+        QVector<SatlitData>::iterator iter;
+        for (iter=m_writeFileClass.allBadSatlitData.end()-1;iter>=m_writeFileClass.allBadSatlitData.begin();iter--)
+        {
+            SatlitData tempBadSat = *iter;
+            if(epochNum != tempBadSat.UTCTime.epochNum)
+                break;
+            m_QRTWrite2File.writeBadSatliteData(tempBadSat);
+            if(iter == m_writeFileClass.allBadSatlitData.begin())
+                break;
+        }
+        m_writeFileClass.allBadSatlitData.clear();
+    }// end of if(m_IS_MAX_OBS)
 }
 
 

@@ -680,6 +680,7 @@ void QSPPModel::Run(bool isDisplayEveryEpoch)
             epochSatlitData = multepochSatlitData.at(n);
             if(epochSatlitData.length() == 0) continue;
             GPSPosTime epochTime = epochSatlitData.at(0).UTCTime;//Obtain the observation time (the epoch stores the observation time for each satellite)
+            epochTime.epochNum = FlagN;
             //Set the epoch of the satellite
             for(int i = 0;i < epochSatlitData.length();i++)
                 epochSatlitData[i].UTCTime.epochNum = FlagN;
@@ -1175,9 +1176,8 @@ void QSPPModel::saveResult2Class(VectorXd X, Vector3d spp_vct, GPSPosTime epochT
 {
     //Store coordinate data
     RecivePos epochRecivePos;
-    epochRecivePos.Year = epochTime.Year;epochRecivePos.Month = epochTime.Month;
-    epochRecivePos.Day = epochTime.Day;epochRecivePos.Hours = epochTime.Hours;
-    epochRecivePos.Minutes = epochTime.Minutes;epochRecivePos.Seconds = epochTime.Seconds;
+    epochTime.epochNum = epochNum;
+    epochRecivePos.UTCtime = epochTime;
 
     epochRecivePos.totolEpochStalitNum = epochResultSatlitData.length();
     epochRecivePos.dX = X[0];
@@ -1190,12 +1190,9 @@ void QSPPModel::saveResult2Class(VectorXd X, Vector3d spp_vct, GPSPosTime epochT
     //Save wet delay and receiver clock error
     double epoch_ZHD = 0.0;
 
-
     if(epochResultSatlitData.length() >= m_minSatFlag) epoch_ZHD = epochResultSatlitData.at(0).UTCTime.TropZHD;
     ClockData epochRecClock;
-    epochRecClock.UTCTime.epochNum = epochNum;
-    epochRecClock.UTCTime.Year = epochRecivePos.Year;epochRecClock.UTCTime.Month = epochRecivePos.Month;epochRecClock.UTCTime.Day = epochRecivePos.Day;
-    epochRecClock.UTCTime.Hours = epochRecivePos.Hours;epochRecClock.UTCTime.Minutes = epochRecivePos.Minutes;epochRecClock.UTCTime.Seconds = epochRecivePos.Seconds;
+    epochRecClock.UTCTime= epochRecivePos.UTCtime;
     // save clock
     int clk_begin = 0;
     memset(epochRecClock.clockData, 0, 6*sizeof(double));

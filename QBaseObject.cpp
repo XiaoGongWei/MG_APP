@@ -9,6 +9,8 @@ void QBaseObject::initVar()
 	IsaddBDS = false;
 	IsaddGalieo = false;
 	m_SystemNum = 0;
+    m_PPP_MODEL = PPP_MODEL::PPP_Combination;
+    m_floder_name = "";
 }
 
 //
