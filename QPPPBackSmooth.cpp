@@ -42,6 +42,13 @@ QPPPBackSmooth::QPPPBackSmooth(QString files_path,  QTextEdit *pQTextEdit, QStri
     tempFilters.clear();
     tempFilters.append("*.clk");
     ClkFileNamesList = searchFilterFile(m_run_floder, tempFilters);
+    // if not find clk try clk_*
+    if(ClkFileNamesList.isEmpty())
+    {
+        tempFilters.clear();
+        tempFilters.append("*.clk_*");
+        ClkFileNamesList = searchFilterFile(m_run_floder, tempFilters);
+    }
     // find erp files
     tempFilters.clear();
     tempFilters.append("*.erp");
@@ -649,7 +656,8 @@ void QPPPBackSmooth::Run(bool isDisplayEveryEpoch)
             {
                 X = last_fillter_X;
                 P = last_fillter_Q;
-                X[0] = 0;X[1] = 0;X[2] = 0;
+                // use diff pos of X = PPP - SPP
+                for(int i = 0;i < 3;i++) X[i] = last_fillter_X[i] - temp_spp_pos[i];
             }
             // store spp position
             spp_vct[0] = temp_spp_pos[0]; spp_vct[1] = temp_spp_pos[1]; spp_vct[2] = temp_spp_pos[2];
