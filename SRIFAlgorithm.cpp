@@ -44,7 +44,7 @@ void SRIFAlgorithm::setModel(SRIF_MODEL model_type)
     {
     case SRIF_MODEL::SPP_STATIC:
     case SRIF_MODEL::SPP_KINEMATIC:
-        m_const_param = 3 + m_sys_num;//[dx,dy,dz,mf]
+        m_const_param = 3 + m_sys_num;//[dx,dy,dz,clki]
         break;
     case SRIF_MODEL::PPP_KINEMATIC:
     case SRIF_MODEL::PPP_STATIC:
