@@ -20,3 +20,13 @@
 - Update antenna igs14_2101.atx file for BDS3.
 - Support BDS3 (B2I and B6I) data processing. The processing results:    [https://blog.csdn.net/xiaoxiao133/article/details/105561824](https://blog.csdn.net/xiaoxiao133/article/details/105561824)
 - Fixed some bugs of backward filtering.
+
+Author: Gongwei Xiao
+
+ QQ Group: **258113285**
+
+ E-mail: [xiaogongwei10@163.com](xiaogongwei10@163.com)
+
+ My Github: https://github.com/xiaogongwei
+
+ My Blog: [xiaogongwei10.blog.csdn.net](xiaogongwei10.blog.csdn.net)
