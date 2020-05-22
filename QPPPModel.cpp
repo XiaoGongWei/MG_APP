@@ -101,6 +101,18 @@ QPPPModel::QPPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method,
 
     // use defualt config
     setConfigure(Method, Satsystem, TropDelay, CutAngle, isKinematic, Smooth_Str);
+
+    //// The same product was used to process the same day of observations
+//    Sp3FileNamesList.clear();
+//    Sp3FileNamesList << "D:/Testdata/ABMF0020/gbm19821.sp3"
+//                     << "D:/Testdata/ABMF0020/gbm19822.sp3"
+//                     << "D:/Testdata/ABMF0020/gbm19823.sp3";
+//    ClkFileNamesList.clear();
+//    ClkFileNamesList << "D:/Testdata/ABMF0020/gbm19821.clk"
+//                     << "D:/Testdata/ABMF0020/gbm19822.clk"
+//                     << "D:/Testdata/ABMF0020/gbm19823.clk";
+//    erpFile = "D:/Testdata/ABMF0020/igs19827.erp";
+
     // save data to QPPPModel
     initQPPPModel(OfileName, Sp3FileNamesList, ClkFileNamesList, erpFile, blqFile, atxFile, grdFile);
 }
