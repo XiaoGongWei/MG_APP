@@ -21,12 +21,18 @@
 - Support BDS3 (B2I and B6I) data processing. The processing results:    [https://blog.csdn.net/xiaoxiao133/article/details/105561824](https://blog.csdn.net/xiaoxiao133/article/details/105561824)
 - Fixed some bugs of backward filtering.
 
+## MG_APP_V2.0.2.exe
+
+- Support all functions of V2.0.1.
+- Support software update automatically (MG-APP -> Tools -> Update, only in Windows system).
+  If there is no update software, MG-APP will restart once, if there is an update, it will download the  update file.
+
 Author: Gongwei Xiao
 
  QQ Group: **258113285**
 
  E-mail: [xiaogongwei10@163.com](xiaogongwei10@163.com)
 
- My Github: https://github.com/xiaogongwei
+ My GitHub: https://github.com/xiaogongwei
 
  My Blog: [xiaogongwei10.blog.csdn.net](xiaogongwei10.blog.csdn.net)
