@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -33,10 +33,10 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
+
 
 #ifndef FTPCLIENT_H
 #define FTPCLIENT_H
@@ -46,19 +46,23 @@
 #include <QUrl>
 #include <QByteArray>
 #include <QDir>
+#include <QString>
 #include <QDebug>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QEventLoop>
+#include <QAuthenticator>
 
 /*
 Example:
-FtpClient clicent;
+FtpCLient clicent;
 clicent.FtpSetUserInfor("david","xiaogongwei");//if you have account or anonymous
 clicent.FtpSetHostPort("127.0.0.1");
 clicent.FtpGet("/Documents/notify_minutes.txt", "./xiao_ftp.txt");
 clicent.FtpPut("./X_epoch_2879.csv", "/Documents/xiao_ftp.csv");
 */
+
+
 
 class FtpClient:public QObject
 {
@@ -87,6 +91,8 @@ protected slots:
     // Download progress
     void ftp_downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void http_finished();
+    // Authentication
+    void slotAuthenticationRequired(QNetworkReply *reply, QAuthenticator *authenticator);
 
 private:
     QFile *m_pFile;

@@ -3,14 +3,22 @@
 
 bool FtpClient::downloadHTTPFile(QString net_file_path, QString local_file_path)
 {
+    m_isDownload = true;
     QEventLoop loop;
     QUrl tUrl = QUrl(net_file_path);
-    if(isExistFile(local_file_path)) return false;
+//    if(isExistFile(local_file_path)) return false;
     m_pFile = new QFile(local_file_path);
-    m_pFile->open(QIODevice::WriteOnly);
+    if(!m_pFile->open(QIODevice::WriteOnly))
+    {
+        delete m_pFile;
+        return false;
+    }
     QNetworkRequest request;
     request.setUrl(tUrl);
 //    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/zip");
+
+    connect(m_pManager, SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)),
+            this, SLOT(slotAuthenticationRequired(QNetworkReply*,QAuthenticator*)));
 
     m_pReply = m_pManager->get(request);
     connect(m_pReply, SIGNAL(finished()), this, SLOT(http_finished()));
@@ -18,7 +26,14 @@ bool FtpClient::downloadHTTPFile(QString net_file_path, QString local_file_path)
     connect(m_pReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(ftp_error(QNetworkReply::NetworkError)));
     connect(m_pReply, SIGNAL(finished()),&loop, SLOT(quit()));
     loop.exec();
-    return true;
+    return m_isDownload;
+}
+
+// Authentication
+void FtpClient::slotAuthenticationRequired(QNetworkReply *reply, QAuthenticator *authenticator)
+{
+    authenticator->setUser("xiaogongwei**");
+    authenticator->setPassword("XiaoGongWei***");
 }
 
 /*
@@ -67,6 +82,14 @@ void FtpClient::http_finished()
            break;
     }
     if(m_pFile->isOpen()) m_pFile->close();
+    if(m_pFile->exists() && m_pFile->size() == 0)
+    {
+        m_isDownload = false;
+        m_pFile->remove();
+    }
+
+
+    delete m_pFile;
     pReply->deleteLater();
 }
 
@@ -100,6 +123,7 @@ void FtpClient::ftp_error(QNetworkReply::NetworkError net_error)
     switch( net_error ){//Determine the status after the connection
      case QNetworkReply::NoError:
         qDebug()<< "Critical Error!" << endl;
+        m_isDownload = true;
         break;
      case QNetworkReply::HostNotFoundError:
         qDebug()<< "Host Not Found!" << endl;
