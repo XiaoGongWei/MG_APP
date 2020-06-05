@@ -24,8 +24,17 @@
 ## MG_APP_V2.0.2.exe
 
 - Support all functions of V2.0.1.
-- Support software update automatically (MG-APP -> Tools -> Update, only in Windows system).
-  If there is no update software, MG-APP will restart once, if there is an update, it will download the  update file.
+- ~~Support software update automatically (MG-APP -> Tools -> Update, only in Windows system).~~
+  ~~If there is no update software, MG-APP will restart once, if there is an update, it will download the  update file.~~
+
+## MG_APP_V2.0.3.exe
+
+- Support all functions of V2.0.1.
+
+- Support software update automatically (MG-APP -> Tools -> Update, in Windows/Linux etc. )
+  If there is no update software, MG-APP will restart once, if there is an update, it will download the  update file and restart.
+  The software update function is developed by the Gongwei Xiao using Qt.
+- Fix read observation data(QReadOFile.cpp).
 
 Author: Gongwei Xiao
 

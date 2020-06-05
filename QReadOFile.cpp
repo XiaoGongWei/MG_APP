@@ -188,8 +188,8 @@ void QReadOFile::getHeadInf()
             tempObsType.SatType = tempLine.mid(0, 1);
             tempObsType.obsNum3ver = tempLine.mid(3, 3).trimmed().toInt();
             QString obstypeName = "";
-            int flag = 0, last_num = 0, i = 0;
-            last_num = tempObsType.obsNum3ver%13;// tempObsType.obsNum3ver if a multiple of 13 read one less line
+            int flag = 0, read_hang_num = 0, i = 0;
+            read_hang_num = (int)(tempObsType.obsNum3ver/13.01);// tempObsType.obsNum3ver if a multiple of 13 read one less line
 
             for (i = 0; i < tempObsType.obsNum3ver;i++)
             {
@@ -197,10 +197,10 @@ void QReadOFile::getHeadInf()
                 flag++;
                 tempObsType.obsNames3ver.append(obstypeName);
                 //Exceeding 13 parsing the next line
-                if (flag % 13 == 0 && last_num != 0)
+                if (flag % 13 == 0 && read_hang_num > 0)
                 {
                     tempLine = m_readOFileClass.readLine();
-                    flag = 0;
+                    flag = 0; read_hang_num--;
                 }
             }
 
