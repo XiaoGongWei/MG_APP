@@ -36,6 +36,13 @@
   The software update function is developed by the Gongwei Xiao using Qt.
 - Fix read observation data(QReadOFile.cpp).
 
+## MG_APP_V2.0.4.exe
+
+- Support all functions of V2.0.3.
+- Added the function of deleting satellite and selecting the observed value type.
+- Added configuration files (.ini and .json) for easy network transport.
+- Please use the Update function (<u>MG-APP -> Tools -> Update</u>) of version <u>2.0.3</u> to upgrade to 2.0.4.
+
 Author: Gongwei Xiao
 
  QQ Group: **258113285**
