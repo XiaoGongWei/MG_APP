@@ -187,7 +187,7 @@ void QPPPModel::initQPPPModel(QString OFileName,QStringList Sp3FileNames,QString
     // get OBS file size
     QFileInfo obs_info(OFileName);
     double obsMB = (double)(obs_info.size())/(1024.0*1024.0);
-    if(obsMB > 200) m_IS_MAX_OBS = true;
+    if(obsMB > 80) m_IS_MAX_OBS = true;
     // init QRTWrite2File class
     if(m_IS_MAX_OBS)
     {
