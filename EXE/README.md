@@ -47,7 +47,7 @@
 - Support all functions of V2.0.4.
 - Added GUI for setting Transfer of noise (Qw) and Initial covariance (Pk) in configuration files (.ini and .json) .
 - Please use the Update function (<u>MG-APP -> Tools -> Update</u>) of version <u>2.0.3</u>  or  <u>2.0.4</u> to upgrade to 2.0.5.
-- The MG-APP V2.0.5 source code can be **<u>open source</u>** for **MG-APP developers**, but developers must be **proficient** in using github's [MG-APP](https://github.com/XiaoGongWei/MG_APP) source code and sign a source code **confidentiality agreement**.
+- The MG-APP V2.0.5 source code can be **<u>open source</u>** for **MG-APP developers**, but developers must be **proficient** in using github's [MG-APP](https://github.com/XiaoGongWei/MG_APP) source code and develop some new functions based on MG-APP, and sign a source code **confidentiality agreement**.
 
 Author: Gongwei Xiao
 
