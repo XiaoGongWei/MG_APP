@@ -26,7 +26,7 @@ QReadAnt::~QReadAnt(void)
 //Initialize variables
 void QReadAnt::initVar()
 {
-	m_AntFileName = "antmod.atx";
+    m_AntFileName = "igs14_2101.atx";
 	isReadAllData = false;
 	isReadHead = false;
 	isReadSatData = false;
@@ -74,7 +74,7 @@ bool QReadAnt::openFiles(QString AntFileName)
         m_ReadFileClass.setFileName(AntFileName);
         if (!m_ReadFileClass.open(QFile::ReadOnly))//If the file fails to open...
         {
-            m_ReadFileClass.setFileName("igs14_2035.atx");//Open to current directory
+            m_ReadFileClass.setFileName("igs14_2101.atx");//Open to current directory
             if (!m_ReadFileClass.open(QFile::ReadOnly))
             {
                 isReadHead = true;
@@ -273,7 +273,7 @@ bool QReadAnt::readSatliData()
 	//Read satellite antenna data
     //debug: commit next 2 line (2018.07.13)
 //	int SatNum = 0;//Record the number of valid satellites, which must be less than MaxSatlitNum
-//	bool IsGPS = false;//判Whether the broken PRN enters the GPS area and is interrupted when it leaves again, preventing the infinite loop.
+//	bool IsGPS = false;//Whether the broken PRN enters the GPS area and is interrupted when it leaves again, preventing the infinite loop.
 	char tempSatType = '0';
 	while (!m_ReadFileClass.atEnd())
 	{
@@ -563,17 +563,18 @@ bool QReadAnt::getRecvL12(double E, double A, char SatType, double &L1Offset, do
     if(!IsFind1 && m_RecvData.PCOPCV.length() > 0) PCOPCV1 = m_RecvData.PCOPCV.at(0);
     if(!IsFind2 && m_RecvData.PCOPCV.length() > 1) PCOPCV2 = m_RecvData.PCOPCV.at(1);
 
-	//Get PCO
+    //Get PCO // NORTH / EAST / UP
     double *PCO1 = PCOPCV1.PCO,*PCO2 = PCOPCV2.PCO;
 	//Calculate PCV below
-	double PCV12[2]={0};
-	double Ztop = m_pi/2 - E;//Altitude angle converted to zenith angle
+    double PCV12[2]={0};
+    double Ztop = m_pi/2 - E;//Altitude angle converted to zenith angle
     getPCV(m_RecvData,SatType,PCV12,Ztop,A, FrqFlag);
+//    if(Ztop*180/m_pi > 65 || Ztop*180/m_pi < 25) memset(PCV12, 0, 2*sizeof(double));
 	//Calculate the offset of L1 L2 in the incident direction of the satellite signal mm
-	L1Offset = -PCV12[0] + PCO1[0]*qCos(E)*qCos(A)+PCO1[1]*qCos(E)*qSin(A)+PCO1[2]*qSin(E);
-	L2Offset = -PCV12[1] + PCO2[0]*qCos(E)*qCos(A)+PCO2[1]*qCos(E)*qSin(A)+PCO2[2]*qSin(E);
-	L1Offset = L1Offset/1000;
-	L2Offset = L2Offset/1000;//Return meter
+    L1Offset = -PCV12[0] + PCO1[0]*qCos(E)*qCos(A)+PCO1[1]*qCos(E)*qSin(A)+PCO1[2]*qSin(E);
+    L2Offset = -PCV12[1] + PCO2[0]*qCos(E)*qCos(A)+PCO2[1]*qCos(E)*qSin(A)+PCO2[2]*qSin(E);
+    L1Offset = L1Offset/1000;
+    L2Offset = L2Offset/1000;//Return meter
 	return true;
 }
 

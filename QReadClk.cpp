@@ -244,7 +244,8 @@ void QReadClk::readFileData2Vec(QStringList ClkFileNames)
 			while(tempLine.mid(0,3) != "AS ")
             {
                 tempLine = clkfile.readLine();
-                if(clkfile.atEnd()) break;
+                if(clkfile.atEnd())
+                    break;
             }
             if(clkfile.atEnd()) break;
 
@@ -264,14 +265,14 @@ void QReadClk::readFileData2Vec(QStringList ClkFileNames)
             epochData.GPSWeek = Week;
             temp_gps_time = epochData.GPSTime;// debug 2018.11.15 xiaogongwei
 
-			while (tempLine.mid(0,3) == "AS ")
+            while (!clkfile.atEnd())
 			{//Enter the first epoch
 				int PRN = 0;
                 char tempSatType = 'G';
                 bool isReadLineData = false;
 				tempSatType = *(tempLine.mid(3,1).toLatin1().data());
 				//GPS system
-				if (tempSatType == 'G'&&isInSystem(tempSatType))
+                if (tempSatType == 'G'&&isInSystem(tempSatType)&&tempLine.mid(0,3) == "AS ")
 				{
 					//Read year, month, day, hour, minute, second
 					Year = tempLine.mid(8,4).toInt();
@@ -291,7 +292,7 @@ void QReadClk::readFileData2Vec(QStringList ClkFileNames)
                     isReadLineData = true;
 				}
 				//Glonass system
-				else if (tempSatType == 'R'&&isInSystem(tempSatType))
+                else if (tempSatType == 'R'&&isInSystem(tempSatType)&&tempLine.mid(0,3) == "AS ")
 				{
 					//Read year, month, day, hour, minute, second
 					Year = tempLine.mid(8,4).toInt();
@@ -311,7 +312,7 @@ void QReadClk::readFileData2Vec(QStringList ClkFileNames)
                     isReadLineData = true;
 				}
 				//BDS system
-				else if (tempSatType == 'C'&&isInSystem(tempSatType))
+                else if (tempSatType == 'C'&&isInSystem(tempSatType)&&tempLine.mid(0,3) == "AS ")
 				{
 					//Read year, month, day, hour, minute, second
 					Year = tempLine.mid(8,4).toInt();
@@ -331,7 +332,7 @@ void QReadClk::readFileData2Vec(QStringList ClkFileNames)
                     isReadLineData = true;
 				}
 				//Galileo system
-				else if (tempSatType == 'E'&&isInSystem(tempSatType))
+                else if (tempSatType == 'E'&&isInSystem(tempSatType)&&tempLine.mid(0,3) == "AS ")
 				{
 					//Read year, month, day, hour, minute, second
 					Year = tempLine.mid(8,4).toInt();
@@ -363,7 +364,7 @@ void QReadClk::readFileData2Vec(QStringList ClkFileNames)
                     Seconds = tempLine.mid(25,9).toDouble();
                     cureent_gps_time = YMD2GPSTime(Year,Month,Day,Hours,Minutes,Seconds,&Week) + WeekOrder.at(i)*604800;//Add 604800s across the week
                     if(cureent_gps_time != temp_gps_time)
-                        break;
+                        break;// only one jump while 2020.12.07
                 }
 			}
             m_allEpochData.append(epochData);

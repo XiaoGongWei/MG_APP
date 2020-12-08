@@ -1,7 +1,7 @@
 /*************************************************************************
 **
 **  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
+**  Copyright (C) 2016-2019 XiaoGongWei
 **  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
@@ -33,9 +33,8 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 
 #ifndef QREADOFILE_H
@@ -80,8 +79,9 @@ class QReadOFile:public QBaseObject
 public:
 	QReadOFile(void);
 	~QReadOFile(void);
-	QReadOFile(QString OfileName);
 // several important functions to read data
+    //  Must be called before setObsFileName()!!! Set the PPP dual-frequency observation type.
+    void setWangObsType(QVector<QStringList> wantObsTypeVct);// wantObsTypeVct = {{G, L1C, L1W}, {R, L1C, L2P}, {C, L2I, L6I}, ...}
     void setObsFileName(QString OfileName);
     void getEpochData(QVector< SatlitData > &epochData);// read a epoch metadata (extendable by version)
     void getMultEpochData(QVector< QVector< SatlitData > >&multEpochData,int epochNum = 1000);// read epochNum epoch metadata (if you go to the bottom of the file in advance, it may not be enough epochNum metadata)
@@ -167,6 +167,7 @@ private:
 	int YMDHM[5];
 	double ObsSeconds;
 	QString SateSystemOTime;//GPS UTC
+    QVector<QStringList> m_wantObsTypeVct;
 };
 
 #endif

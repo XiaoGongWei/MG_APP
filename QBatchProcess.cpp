@@ -1,7 +1,7 @@
 #include "QBatchProcess.h"
 
 QBatchProcess::QBatchProcess(QString files_path, QTextEdit *pQTextEdit, QString Method, QString Satsystem, QString TropDelay,
-                             double CutAngle, bool isKinematic, QString Smooth_Str, bool isBackBatch)
+                             double CutAngle, bool isKinematic, QString Smooth_Str, bool isBackBatch, QString products, QString pppmodel_t)
 {
     // GNSS configure
     mp_QTextEdit = pQTextEdit;
@@ -9,14 +9,23 @@ QBatchProcess::QBatchProcess(QString files_path, QTextEdit *pQTextEdit, QString 
     m_Satsystem = Satsystem;
     m_TropDelay = TropDelay;
     m_CutAngle = CutAngle;
+    m_Product = products;
+    QString pre_name = "Final_";
+    if(products.contains("igs", Qt::CaseInsensitive))
+        pre_name = "Final_";
+    else
+        pre_name = "RT_";
+
 
     // store data
     M_ObsFiles_Path = files_path;
-    m_mkdir_name = "allStations";
+    m_mkdir_name = pre_name + "allStations";
     m_isRuned = false;
     m_isKinematic = isKinematic;
     m_Smooth_Str = Smooth_Str;
     m_isBackBatch = isBackBatch;
+    m_PPPModel_Str = pppmodel_t;
+
 }
 QBatchProcess::~QBatchProcess()
 {
@@ -91,7 +100,7 @@ bool QBatchProcess::Run(bool isDisplayEveryEpoch)
         PlotGUIData single_data;// get single station data
         if(m_isBackBatch)
         {
-            QPPPBackSmooth myPPP(ppp_path, mp_QTextEdit, m_Method, m_Satsystem, m_TropDelay, m_CutAngle, m_isKinematic, m_Smooth_Str);
+            QPPPBackSmooth myPPP(ppp_path, mp_QTextEdit, m_Method, m_Satsystem, m_TropDelay, m_CutAngle, m_isKinematic, m_Smooth_Str, m_Product, m_PPPModel_Str);
             myPPP.Run(isDisplayEveryEpoch);
             myPPP.getRunResult(single_data);
             m_AllStationsData.append(single_data);
@@ -99,7 +108,7 @@ bool QBatchProcess::Run(bool isDisplayEveryEpoch)
         }
         else
         {
-            QPPPModel myPPP(ppp_path, mp_QTextEdit, m_Method, m_Satsystem, m_TropDelay, m_CutAngle, m_isKinematic, m_Smooth_Str);
+            QPPPModel myPPP(ppp_path, mp_QTextEdit, m_Method, m_Satsystem, m_TropDelay, m_CutAngle, m_isKinematic, m_Smooth_Str, m_Product, m_PPPModel_Str);
             myPPP.Run(isDisplayEveryEpoch);
             myPPP.getRunResult(single_data);
             m_AllStationsData.append(single_data);

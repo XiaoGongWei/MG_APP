@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -33,15 +33,17 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 #ifndef QNEWFUNLIB_H
 #define QNEWFUNLIB_H
 
 // You can add some new functions here
 #include <QDebug>
+#include <QDir>
+#include <QFileInfo>
+#include <QFileInfoList>
 #include<Eigen/Dense>
 using namespace Eigen;
 
@@ -52,6 +54,7 @@ public:
 	QNewFunLib(void);
 	~QNewFunLib(void);
 	void computeCrossPoint(Vector3d Recv1Pos,Vector3d Recv2Pos,Vector3d SatPos,Vector3d *crossPoint,Vector3d *talpha = NULL);//计算SatPos在1,2号接收机直线上的投影点
+    static bool deleteDirectory(const QString &path);
 private:
 
 // data section

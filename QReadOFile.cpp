@@ -54,18 +54,6 @@ QReadOFile::QReadOFile()
 }
 
 //Class initialization
-QReadOFile::QReadOFile(QString OfileName)
-{
-	initVar();
-	if (OfileName.trimmed().isEmpty())
-		ErroTrace("File Name is Empty!(QReadOFile::QReadOFile(QString OfileName))");
-	m_OfileName = OfileName;
-	//Read file header information and parse
-	getHeadInf();//The file is not closed here
-	baseYear = (int)(YMDHM[0]/100)*100;
-}
-
-//Class initialization
 void QReadOFile::setObsFileName(QString OfileName)
 {
     initVar();
@@ -76,6 +64,12 @@ void QReadOFile::setObsFileName(QString OfileName)
     getHeadInf();//The file is not closed here
     baseYear = (int)(YMDHM[0]/100)*100;
 
+}
+
+// wantObsTypeVct = {{G, L1C, L1W}, {R, L1C, L2P},...}
+void QReadOFile::setWangObsType(QVector<QStringList> wantObsTypeVct)
+{
+    m_wantObsTypeVct = wantObsTypeVct;
 }
 
 QReadOFile::~QReadOFile(void)
@@ -98,7 +92,7 @@ void QReadOFile::getHeadInf()
 		tempLine = m_readOFileClass.readLine();
         if (tempLine.contains("END OF HEADER",Qt::CaseInsensitive))
             break;
-        if (tempLine.contains("RINEX VERSION",Qt::CaseInsensitive))
+        if (tempLine.contains("RINEX VERSION / TYPE",Qt::CaseInsensitive))
         {
             RinexVersion =  tempLine.mid(0,20).trimmed().toDouble();
             FileIdType = tempLine.at(20);
@@ -675,10 +669,57 @@ void QReadOFile::ProcessCLPos(obsVarNamesVer3 epochSystem)
 
         }
     }
-    // juge some system maybe single frequence
-    if(isInSystem(*(ObsTypePos.SatType.toLatin1().data())) && ObsTypePos.C2Pos.length() == 0)
+    // Set the PPP dual-frequency observation type
+    QStringList wantList;
+    for(int i = 0; i < m_wantObsTypeVct.length();i++){
+        // find want systeam type
+        QStringList tempList = m_wantObsTypeVct.at(i);
+        QString sysStr;
+        if(tempList.length() > 0) sysStr = tempList.at(0);
+        if(epochSystem.SatType.contains(sysStr, Qt::CaseInsensitive)){
+            wantList = tempList; break;
+        }
+    }
+    if(wantList.length() >= 2)
+    {// set observation type
+        QString L1Type = wantList.at(1);
+        QString C1i = "C" + L1Type.mid(1,2), L1i = "L" + L1Type.mid(1,2);
+        int tempPos1 = -1, tempPos2 = -1;
+        // set C1 and L1
+        tempPos1 = obsType.indexOf(C1i); tempPos2 = obsType.indexOf(L1i);// find pos of C1P L1P etc
+        ObsTypePos.C1Type.clear(); ObsTypePos.C1Pos.clear();
+        ObsTypePos.L1Type.clear(); ObsTypePos.L1Pos.clear();
+        if(tempPos1 != -1){
+            ObsTypePos.C1Type.append(C1i);
+            ObsTypePos.C1Pos.append(tempPos1);
+        }
+        if(tempPos2 != -1){
+            ObsTypePos.L1Type.append(L1i);
+            ObsTypePos.L1Pos.append(tempPos2);
+        }
+    }
+    if(wantList.length() >= 3)
     {
-        QString warning_str = "Please check >>>SYS / # / OBS TYPES<<< in Observation file." + ENDLINE
+        QString L2Type = wantList.at(2);
+        QString C2i = "C" + L2Type.mid(1,2), L2i = "L" + L2Type.mid(1,2);
+        int tempPos1 = -1, tempPos2 = -1;
+        // set C2 and L2
+        tempPos1 = obsType.indexOf(C2i); tempPos2 = obsType.indexOf(L2i);// find pos of C1P L1P etc
+        ObsTypePos.C2Type.clear(); ObsTypePos.C2Pos.clear();
+        ObsTypePos.L2Type.clear(); ObsTypePos.L2Pos.clear();
+        if(tempPos1 != -1){
+            ObsTypePos.C2Type.append(C2i);
+            ObsTypePos.C2Pos.append(tempPos1);
+        }
+        if(tempPos2 != -1){
+            ObsTypePos.L2Type.append(L2i);
+            ObsTypePos.L2Pos.append(tempPos2);
+        }
+    }
+    // juge some system maybe single frequence
+    if(isInSystem(*(ObsTypePos.SatType.toLatin1().data())) && (ObsTypePos.C1Pos.length()*ObsTypePos.C2Pos.length() == 0))
+    {
+        QString warning_str = "Please check >>>SYS / # / OBS TYPES<<<." + ENDLINE
                 + "You select system maybe single frequence!"+ ENDLINE + "System ( " + ObsTypePos.SatType
                 + " ) maybe single frequence";
         ErroTrace(warning_str);

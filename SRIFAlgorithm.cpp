@@ -32,6 +32,37 @@ void SRIFAlgorithm::initVar()
     m_sys_num = 1;
     m_sys_str = "G";
     m_LP_whight = 1e6;
+    m_xyz_dynamic_Qw = 1e6; m_zwd_Qw = 3e-8; m_clk_Qw = 1e6; m_amb_Qw = 1e-16; m_ion_Qw = 0.1;
+    m_xyz_dynamic_Pk = 1e6; m_zwd_Pk = 10; m_clk_Pk = 1e6; m_amb_Pk = 1e6; m_ion_Pk = 10;
+}
+
+void SRIFAlgorithm::setFilterParams(QVector<QStringList> Qw_Pk_LPacc)
+{
+    if(Qw_Pk_LPacc.length() >= 2){
+        QStringList Qw_StrList =  Qw_Pk_LPacc.at(0),Pk_StrList = Qw_Pk_LPacc.at(1);
+        if(Qw_StrList.length() < 5) return ; if(Pk_StrList.length() < 5) return ;
+        // set Qw
+        m_xyz_dynamic_Qw = Qw_StrList.at(0).toDouble(); m_zwd_Qw = Qw_StrList.at(1).toDouble();
+        m_clk_Qw = Qw_StrList.at(2).toDouble(); m_amb_Qw = Qw_StrList.at(3).toDouble();
+        m_ion_Qw = Qw_StrList.at(4).toDouble();
+        // set Pk
+        m_xyz_dynamic_Pk = Pk_StrList.at(0).toDouble(); m_zwd_Pk = Pk_StrList.at(1).toDouble();
+        m_clk_Pk= Pk_StrList.at(2).toDouble(); m_amb_Pk = Pk_StrList.at(3).toDouble();
+        m_ion_Pk = Pk_StrList.at(4).toDouble();
+    }
+    if(Qw_Pk_LPacc.length() >= 3){
+        QStringList LP_StrList = Qw_Pk_LPacc.at(2);
+        double LP_ratio = 1e3;
+        if(LP_StrList.length() == 2 && LP_StrList.at(0).toDouble() != 0 )
+            LP_ratio = LP_StrList.at(1).toDouble() / LP_StrList.at(0).toDouble();
+        m_LP_whight = LP_ratio * LP_ratio;// set m_LP_whight
+    }
+    // some time Qw as denominator,such as 1/Qw; so Qw must not zero
+    double myEps = 1e-16;
+    if(0 == m_xyz_dynamic_Qw) m_xyz_dynamic_Qw = myEps;
+    if(0 == m_zwd_Qw) m_zwd_Qw = myEps; if(0 == m_clk_Qw) m_clk_Qw = myEps;
+    if(0 == m_amb_Qw) m_amb_Qw = myEps; if(0 == m_ion_Qw) m_ion_Qw = myEps;
+
 }
 
 //
@@ -44,7 +75,7 @@ void SRIFAlgorithm::setModel(SRIF_MODEL model_type)
     {
     case SRIF_MODEL::SPP_STATIC:
     case SRIF_MODEL::SPP_KINEMATIC:
-        m_const_param = 3 + m_sys_num;//[dx,dy,dz,clki]
+        m_const_param = 3 + m_sys_num;//[dx,dy,dz,mf]
         break;
     case SRIF_MODEL::PPP_KINEMATIC:
     case SRIF_MODEL::PPP_STATIC:
@@ -59,11 +90,7 @@ void SRIFAlgorithm::setModel(SRIF_MODEL model_type)
 void SRIFAlgorithm::initSRIFPara(QVector< SatlitData > &currEpoch,MatrixXd &B,VectorXd &L)
 {
     int epochLenLB = currEpoch.length();
-    // Set weight ratio in kinematic
-    if(SRIF_MODEL::SPP_KINEMATIC == m_SRIF_MODEL)
-        m_LP_whight = 1e6;
-    if(SRIF_MODEL::PPP_KINEMATIC == m_SRIF_MODEL)
-        m_LP_whight = 1e6;
+
     //Fk_1 initialization
     switch (m_SRIF_MODEL) {
     case SRIF_MODEL::SPP_STATIC:
@@ -86,16 +113,16 @@ void SRIFAlgorithm::initSRIFPara(QVector< SatlitData > &currEpoch,MatrixXd &B,Ve
     case SRIF_MODEL::SPP_KINEMATIC:
         m_Q.resize(m_const_param,m_const_param);
         m_Q.setZero();
-        for(int i = 3; i < m_const_param;i++) m_Q(i,i) = 1e+6;// for clock
+        for(int i = 3; i < m_const_param;i++) m_Q(i,i) = m_clk_Pk;// for clock
         break;
     case SRIF_MODEL::PPP_KINEMATIC:
     case SRIF_MODEL::PPP_STATIC:
         m_Q.resize(m_const_param+epochLenLB,m_const_param+epochLenLB);
         m_Q.setZero();
-        m_Q(0,0) = 1000;m_Q(1,1) = 1000;m_Q(2,2) = 1000;
-        m_Q(3,3) = 0.5;
-        for(int i = 4; i < m_const_param;i++) m_Q(i,i) = 1e6; // for clock
-        for (int i = 0;i < epochLenLB;i++)	m_Q(m_const_param+i,m_const_param+i) = 1e6;// for Ambiguity
+        m_Q(0,0) = m_xyz_dynamic_Pk;m_Q(1,1) = m_xyz_dynamic_Pk;m_Q(2,2) = m_xyz_dynamic_Pk;
+        m_Q(3,3) = m_zwd_Pk;
+        for(int i = 4; i < m_const_param;i++) m_Q(i,i) = m_clk_Pk; // for clock
+        for (int i = 0;i < epochLenLB;i++)	m_Q(m_const_param+i,m_const_param+i) = m_amb_Pk;// for Ambiguity
         break;
     default:
         ErroTrace("QKalmanFilter::initKalman Bad.");
@@ -108,18 +135,18 @@ void SRIFAlgorithm::initSRIFPara(QVector< SatlitData > &currEpoch,MatrixXd &B,Ve
         case SRIF_MODEL::SPP_KINEMATIC:
             m_Rwk.resize(m_const_param,m_const_param);
             m_Rwk.setZero();
-            m_Rwk(0,0) = 1e6; m_Rwk(1,1) = 1e6; m_Rwk(2,2) = 1e6;
-            for(int i = 3; i < m_const_param;i++) m_Rwk(i,i) = 1e-3;// for clock
+            m_Rwk(0,0) = 1e10; m_Rwk(1,1) = 1e10; m_Rwk(2,2) = 1e10;
+            for(int i = 3; i < m_const_param;i++) m_Rwk(i,i) = sqrt(1/m_clk_Qw);// for clock
             break;
         case SRIF_MODEL::PPP_KINEMATIC:
         case SRIF_MODEL::PPP_STATIC:
             m_Rwk.resize(m_const_param+epochLenLB,m_const_param+epochLenLB);
             m_Rwk.setZero();
-            m_Rwk(0,0) = 1e6; m_Rwk(1,1) = 1e6; m_Rwk(2,2) = 1e6;
-            m_Rwk(3,3) = 0.5774e4;//Zenith tropospheric residual variance
-            for(int i = 4; i < m_const_param;i++) m_Rwk(i,i) = 1e-3; // for clock
+            m_Rwk(0,0) = 1e10; m_Rwk(1,1) = 1e10; m_Rwk(2,2) = 1e10;
+            m_Rwk(3,3) = sqrt(1/m_zwd_Qw);//Zenith tropospheric residual variance
+            for(int i = 4; i < m_const_param;i++) m_Rwk(i,i) = sqrt(1/m_clk_Qw); // for clock
             for(int i = m_const_param;i < m_const_param+epochLenLB;i++)// for Ambiguity
-                m_Rwk(i,i) = 1e6;
+                m_Rwk(i,i) = sqrt(1/m_amb_Qw);
             break;
         default:
             ErroTrace("QKalmanFilter::initKalman Bad.");
@@ -128,10 +155,10 @@ void SRIFAlgorithm::initSRIFPara(QVector< SatlitData > &currEpoch,MatrixXd &B,Ve
 
     // juge is kinematic
     if(m_SRIF_MODEL == SRIF_MODEL::SPP_KINEMATIC || m_SRIF_MODEL == SRIF_MODEL::PPP_KINEMATIC)
-    {// for Kinematic
-        m_Rwk(0,0) = 1e-2;
-        m_Rwk(1,1) = 1e-2;
-        m_Rwk(2,2) = 1e-2;
+    {
+        m_Rwk(0,0) = sqrt(1/m_xyz_dynamic_Qw);
+        m_Rwk(1,1) = sqrt(1/m_xyz_dynamic_Qw);
+        m_Rwk(2,2) = sqrt(1/m_xyz_dynamic_Qw);
     }
 
     // init m_G of m_Rwk
@@ -186,6 +213,136 @@ void SRIFAlgorithm::initSRIFPara(QVector< SatlitData > &currEpoch,MatrixXd &B,Ve
     this->m_isInitPara = true;//Not initialized after
 }
 
+//Initialize SRIF for nocombination
+void SRIFAlgorithm::initSRIFPara_NoCombination(QVector< SatlitData > &currEpoch,MatrixXd &B,VectorXd &L)
+{
+    int epochLenLB = currEpoch.length();
+
+    //Fk_1 initialization
+    switch (m_SRIF_MODEL) {
+    case SRIF_MODEL::SPP_STATIC:
+    case SRIF_MODEL::SPP_KINEMATIC:
+        m_Phi.resize(m_const_param+epochLenLB, m_const_param+epochLenLB);
+        m_Phi.setIdentity();
+        break;
+    case SRIF_MODEL::PPP_KINEMATIC:
+    case SRIF_MODEL::PPP_STATIC:
+        m_Phi.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+        m_Phi.setIdentity();
+        break;
+    default:
+        break;
+    }
+
+    //Initial state covariance matrix m_Q initialization(not used)
+    switch (m_SRIF_MODEL) {
+    case SRIF_MODEL::SPP_STATIC:
+    case SRIF_MODEL::SPP_KINEMATIC:
+        m_Q.resize(m_const_param+epochLenLB,m_const_param+epochLenLB);
+        m_Q.setZero();
+        for(int i = 3; i < m_const_param;i++) m_Q(i,i) = m_clk_Pk;// for clock
+        for(int i = m_const_param; i < m_const_param+epochLenLB;i++) m_Q(i,i) = m_ion_Pk;// for ION
+        break;
+    case SRIF_MODEL::PPP_KINEMATIC:
+    case SRIF_MODEL::PPP_STATIC:
+        m_Q.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+        m_Q.setZero();
+        m_Q(0,0) = m_xyz_dynamic_Pk;m_Q(1,1) = m_xyz_dynamic_Pk;m_Q(2,2) = m_xyz_dynamic_Pk;
+        m_Q(3,3) = m_zwd_Pk;
+        for(int i = 4; i < m_const_param;i++) m_Q(i,i) = m_clk_Pk; // for clock
+        for (int i = m_const_param;i < m_const_param+epochLenLB;i++)	m_Q(i,i) = m_ion_Pk;// for ION
+        for (int i = m_const_param+epochLenLB;i < m_const_param+3*epochLenLB;i++)	m_Q(i,i) = m_amb_Pk;// for AMB
+        break;
+    default:
+        ErroTrace("QKalmanFilter::initKalman Bad.");
+        break;
+        }
+
+    //Chole decomposition of m_Rwk covariance inverse
+    switch (m_SRIF_MODEL) {
+        case SRIF_MODEL::SPP_STATIC:
+        case SRIF_MODEL::SPP_KINEMATIC:
+            m_Rwk.resize(m_const_param+epochLenLB,m_const_param+epochLenLB);
+            m_Rwk.setZero();
+            m_Rwk(0,0) = 1e10; m_Rwk(1,1) = 1e10; m_Rwk(2,2) = 1e10;
+            for(int i = 3; i < m_const_param;i++) m_Rwk(i,i) = sqrt(1/m_clk_Qw);// for clock
+            for(int i = m_const_param; i < m_const_param+epochLenLB;i++) m_Rwk(i,i) = sqrt(1/m_ion_Qw);// for ION
+            break;
+        case SRIF_MODEL::PPP_KINEMATIC:
+        case SRIF_MODEL::PPP_STATIC:
+            m_Rwk.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+            m_Rwk.setZero();
+            m_Rwk(0,0) = 1e10; m_Rwk(1,1) = 1e10; m_Rwk(2,2) = 1e10;
+            m_Rwk(3,3) = sqrt(1/m_zwd_Qw);//Zenith tropospheric residual variance
+            for(int i = 4; i < m_const_param;i++) m_Rwk(i,i) =  sqrt(1/m_clk_Qw); // for clock
+            for(int i = m_const_param;i < m_const_param+epochLenLB;i++) m_Rwk(i,i) =  sqrt(1/m_ion_Qw);// for ION
+            for(int i = m_const_param+epochLenLB;i < m_const_param+3*epochLenLB;i++) m_Rwk(i,i) =  sqrt(1/m_amb_Qw);// for AMB
+            break;
+        default:
+            ErroTrace("QKalmanFilter::initKalman Bad.");
+            break;
+        }
+
+    // juge is kinematic
+    if(m_SRIF_MODEL == SRIF_MODEL::SPP_KINEMATIC || m_SRIF_MODEL == SRIF_MODEL::PPP_KINEMATIC)
+    {
+        m_Rwk(0,0) = 1/m_xyz_dynamic_Qw;
+        m_Rwk(1,1) = 1/m_xyz_dynamic_Qw;
+        m_Rwk(2,2) = 1/m_xyz_dynamic_Qw;
+    }
+
+    // init m_G of m_Rwk
+    switch (m_SRIF_MODEL) {
+        case SRIF_MODEL::SPP_STATIC:
+        case SRIF_MODEL::SPP_KINEMATIC:
+            m_G.resize(m_const_param+epochLenLB,m_const_param+epochLenLB);
+            m_G.setIdentity();
+//            for(int i = 3; i < m_const_param;i++) m_G(i,i) = 1;// for clock
+            break;
+        case SRIF_MODEL::PPP_KINEMATIC:
+        case SRIF_MODEL::PPP_STATIC:
+            m_G.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+            m_G.setIdentity();
+//            m_G(3,3) = 1;//Zenith troposphere
+//            for(int i = 4; i < m_const_param;i++) m_G(i,i) = 1; // for clock
+            break;
+        default:
+            ErroTrace("QKalmanFilter::initKalman Bad.");
+            break;
+        }
+//    if(m_SRIF_MODEL == SRIF_MODEL::SPP_KINEMATIC || m_SRIF_MODEL == SRIF_MODEL::PPP_KINEMATIC)
+//    {
+//        m_G(0,0) = 1;
+//        m_G(1,1) = 1;
+//        m_G(2,2) = 1;
+//    }
+
+    //Xk initialization, least squares initialization
+    switch (m_SRIF_MODEL) {
+        case SRIF_MODEL::SPP_STATIC:
+        case SRIF_MODEL::SPP_KINEMATIC:
+            m_Xk.resize(m_const_param+epochLenLB);
+            m_Xk.setZero();
+            break;
+        case SRIF_MODEL::PPP_KINEMATIC:
+        case SRIF_MODEL::PPP_STATIC:
+            m_Xk.resize(m_const_param+3*epochLenLB);
+            m_Xk.setZero();
+            break;
+        default:
+            ErroTrace("QKalmanFilter::initKalman Bad.");
+            break;
+        }
+    // init SRIF
+    m_Rp = B.transpose()*B;
+    m_Zp = B.transpose()*L;
+
+    m_Xk = m_Rp.inverse()*m_Zp;
+    m_init_Xk = m_Xk;
+
+    this->m_isInitPara = true;//Not initialized after
+}
+
 //Change the size of the SRIF parameter (only PPP can change paramater)
 void SRIFAlgorithm::changeSRIFPara( QVector< SatlitData > &epochSatlitData,QVector< int >oldPrnFlag, int preEpochLen)
 {
@@ -214,17 +371,17 @@ void SRIFAlgorithm::changeSRIFPara( QVector< SatlitData > &epochSatlitData,QVect
     //m_Rwk system noise initialization
     m_Rwk.resize(m_const_param+epochLenLB,m_const_param+epochLenLB);
     m_Rwk.setZero();
-    m_Rwk(0,0) = 1e6; m_Rwk(1,1) = 1e6; m_Rwk(2,2) = 1e6;
-    m_Rwk(3,3) = 0.5774e4;//Zenith tropospheric residual variance 3e-8
-    for(int i = 4; i < m_const_param;i++) m_Rwk(i,i) = 1e-3; // for clock
+    m_Rwk(0,0) = 1e10; m_Rwk(1,1) = 1e10; m_Rwk(2,2) = 1e10;
+    m_Rwk(3,3) = sqrt(1/m_zwd_Qw);//Zenith tropospheric residual variance 3e-8
+    for(int i = 4; i < m_const_param;i++) m_Rwk(i,i) = sqrt(1/m_clk_Qw); // for clock
     for(int i = m_const_param;i < m_const_param+epochLenLB;i++)// for Ambiguity
-        m_Rwk(i,i) = 1e6;
+        m_Rwk(i,i) = sqrt(1/m_amb_Qw);
     // juge is kinematic
     if(m_SRIF_MODEL == SRIF_MODEL::PPP_KINEMATIC)
-    {// for Kinematic
-        m_Rwk(0,0) = 1e-2;
-        m_Rwk(1,1) = 1e-2;
-        m_Rwk(2,2) = 1e-2;
+    {
+        m_Rwk(0,0) = sqrt(1/m_xyz_dynamic_Qw);
+        m_Rwk(1,1) = sqrt(1/m_xyz_dynamic_Qw);
+        m_Rwk(2,2) = sqrt(1/m_xyz_dynamic_Qw);
     }
 
     // init m_G of m_Rwk
@@ -317,7 +474,7 @@ void SRIFAlgorithm::changeSRIFPara( QVector< SatlitData > &epochSatlitData,QVect
             m_Rp(n+m_const_param,n+m_const_param) = oneStalit_lamda;
             m_Zp(n+m_const_param,0) = m_Xk(n+m_const_param,0) * oneStalit_lamda;
 
-            m_Rwk(n+m_const_param, n+m_const_param) = 1e6; // set new ambiguity noise matrix m_Rwk (this's important)
+            m_Rwk(n+m_const_param, n+m_const_param) = sqrt(m_amb_Qw); // set new ambiguity noise matrix m_Rwk (this's important)
 
             for (int i = 0;i < m_const_param;i++)
             {
@@ -327,6 +484,200 @@ void SRIFAlgorithm::changeSRIFPara( QVector< SatlitData > &epochSatlitData,QVect
         }
     }//Pk_1 saves the data
     MatrixXd error = m_Rp*m_Xk - m_Zp;
+//    m_matrix.writeCSV("m_Rp.csv", m_Rp);
+//    m_matrix.writeCSV("tempPk_1.csv", tempPk_1);
+
+    m_VarChang = true;
+}
+
+
+
+//Change the size of the SRIF parameter (only PPP can change paramater)
+void SRIFAlgorithm::changeSRIFPara_NoCombination( QVector< SatlitData > &epochSatlitData,QVector< int >oldPrnFlag, int preEpochLen)
+{
+    int epochLenLB = epochSatlitData.length();
+    m_Phi.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+    m_Phi.setZero();
+    m_Phi.setIdentity();
+    m_Phi_Inv = m_Phi.inverse();
+    //Xk_1 change
+    VectorXd tempXk_1 = m_Xk;
+    m_Xk.resize(3*epochLenLB+m_const_param);
+    m_Xk.setZero();
+    //Xk.resize(epochLenLB+5);
+    for (int i = 0;i < m_const_param;i++)
+        m_Xk(i) = tempXk_1(i);
+    for (int i = 0;i<epochLenLB;i++)
+    {
+        if (oldPrnFlag.at(i)!=-1)//Save the old satellite ION and L1 and L2 ambiguity
+        {
+            m_Xk(m_const_param+i) = tempXk_1(oldPrnFlag.at(i)+m_const_param);// for ION
+            m_Xk(m_const_param+epochLenLB+i) = tempXk_1(oldPrnFlag.at(i)+ preEpochLen + m_const_param);// for L1 ambiguity
+            m_Xk(m_const_param+2*epochLenLB+i) = tempXk_1(oldPrnFlag.at(i)+ 2*preEpochLen + m_const_param);// for L2 ambiguity
+        }
+
+        else
+        {//New satellite ambiguity calculation
+            SatlitData oneStalit = epochSatlitData.at(i);
+            double F1 = oneStalit.Frq[0], F2 = oneStalit.Frq[1];
+            m_Xk(m_const_param+i) = (oneStalit.C1 - oneStalit.C2)/(1 - (F1*F1)/(F2*F2));
+            m_Xk(m_const_param+epochLenLB+i) = (oneStalit.C1 - oneStalit.L1)/oneStalit.Frq[0];// new L1 ambiguity
+            m_Xk(m_const_param+2*epochLenLB+i) = (oneStalit.C2 - oneStalit.L2)/oneStalit.Frq[1];// new L2 ambiguity
+        }
+    }
+    //m_Rwk system noise initialization
+    m_Rwk.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+    m_Rwk.setZero(); 
+    m_Rwk(0,0) = 1e10; m_Rwk(1,1) = 1e10; m_Rwk(2,2) = 1e10;
+    m_Rwk(3,3) = sqrt(1/m_zwd_Qw);//Zenith tropospheric residual variance
+    for(int i = 4; i < m_const_param;i++) m_Rwk(i,i) =  sqrt(1/m_clk_Qw); // for clock
+    for(int i = m_const_param;i < m_const_param+epochLenLB;i++) m_Rwk(i,i) =  sqrt(1/m_ion_Qw);// for ION
+    for(int i = m_const_param+epochLenLB;i < m_const_param+3*epochLenLB;i++) m_Rwk(i,i) =  sqrt(1/m_amb_Qw);// for AMB
+
+    // juge is kinematic
+    if(m_SRIF_MODEL == SRIF_MODEL::PPP_KINEMATIC)
+    {
+        m_Rwk(0,0) = 1/m_xyz_dynamic_Qw;
+        m_Rwk(1,1) = 1/m_xyz_dynamic_Qw;
+        m_Rwk(2,2) = 1/m_xyz_dynamic_Qw;
+    }
+
+    // init m_G of m_Rwk
+    m_G.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+    m_G.setIdentity();
+
+    //Reset Rk_1 observation noise matrix (reset on the outside, no need to repeat reset here)
+    //The saved state covariance matrix Pk_1 is increased or decreased (here is more complicated, the main idea is to take out old satellite data, and initialize the new satellite data)
+    MatrixXd tempPk_1 = m_Rp, tempZp_1 = m_Zp;
+    m_Rp.resize(m_const_param+3*epochLenLB,m_const_param+3*epochLenLB);
+    m_Rp.setZero();
+    m_Zp.resize(m_const_param+3*epochLenLB,1);
+    m_Zp.setZero();
+    //If the number of satellites changes
+    //if satlite number lost, should change tempZp_1 first!
+    QVector< int > lost_satNum;//store lost satlite number
+    for (int i = 0;i < preEpochLen;i++)
+    {
+        bool is_find = false;
+        for(int j = 0;j < epochLenLB;j++)
+        {
+            int flag = oldPrnFlag.at(j);
+            if(i == flag)
+            {
+                is_find = true;
+                break;
+            }
+        }
+        if(!is_find) lost_satNum.append(i);
+    }
+    // if have lost number change tempZp_1(previous epoch m_Xk sored in tempXk_1)
+    for(int i = 0; i < lost_satNum.length();i++)
+    {
+        int lostNumber = lost_satNum.at(i) + m_const_param;// 5 is The first five parameters
+        if(lostNumber + 1 > tempPk_1.cols()) break;
+        for(int k = 0; k < tempZp_1.rows();k++)
+        {
+            //
+            tempZp_1(k, 0) = tempZp_1(k, 0) - tempPk_1(k, lostNumber)*tempXk_1(lostNumber,0)
+                    - tempPk_1(k, lostNumber+preEpochLen)*tempXk_1(lostNumber+preEpochLen,0)
+                    - tempPk_1(k, lostNumber+2*preEpochLen)*tempXk_1(lostNumber+2*preEpochLen,0);
+        }
+    }
+
+    for (int i = 0;i < m_const_param;i++)
+    {
+        for (int j = 0;j < m_const_param;j++)
+            m_Rp(i,j) = tempPk_1(i,j);
+        m_Zp(i,0) = tempZp_1(i,0);
+    }
+
+    for (int n = 0; n < epochLenLB;n++)
+    {
+        int flag = oldPrnFlag.at(n);
+        if ( flag != -1)//Description: The previous epoch contains this satellite data and needs to be taken from tempPk_1
+        {
+            flag += m_const_param;//The number of rows of this satellite in the original data tempPk_1
+            m_Zp(n+m_const_param,0) = tempZp_1(flag,0);// save old Zp tp new Zp for ION
+            m_Zp(n+m_const_param+epochLenLB,0) = tempZp_1(flag+preEpochLen,0);// save old Zp tp new Zp for L1 amb
+            m_Zp(n+m_const_param+2*epochLenLB,0) = tempZp_1(flag+2*preEpochLen,0);// save old Zp tp new Zp for L2 amb
+            for (int i = 0;i < tempPk_1.cols();i++)
+            {//Take out from tempPk_1 and skip the data with oldPrnFlag -1
+                if (i < m_const_param)
+                {
+                    // for ION
+                    m_Rp(n+m_const_param,i) = tempPk_1(flag,i);
+                    m_Rp(i,n+m_const_param) = tempPk_1(i,flag);
+                    // for L1 AMB
+                    m_Rp(n+m_const_param+epochLenLB,i) = tempPk_1(flag+preEpochLen,i);
+                    m_Rp(i,n+m_const_param+epochLenLB) = tempPk_1(i,flag+preEpochLen);
+                    // for L2 AMB
+                    m_Rp(n+m_const_param+2*epochLenLB,i) = tempPk_1(flag+2*preEpochLen,i);
+                    m_Rp(i,n+m_const_param+2*epochLenLB) = tempPk_1(i,flag+2*preEpochLen);
+                }
+                else
+                {
+                    int findCols = i - m_const_param,saveFlag = -1;
+                    //Find if the data exists in the old linked list and where it will be saved
+                    for (int m = 0;m < oldPrnFlag.length();m++)
+                    {
+                        if (findCols == oldPrnFlag.at(m))
+                        {
+                            saveFlag = m;
+                            break;
+                        }
+                    }
+                    if (saveFlag!=-1)
+                    {
+//                        qDebug() <<"(" << flag << "," << i << ") -> " <<" (" << n+m_const_param << "," << saveFlag+m_const_param << ")";
+                        m_Rp(n+m_const_param,saveFlag+m_const_param) = tempPk_1(flag,i);// for ION
+                        m_Rp(n+m_const_param,saveFlag+m_const_param+epochLenLB) = tempPk_1(flag,i+preEpochLen);
+                        m_Rp(n+m_const_param,saveFlag+m_const_param+2*epochLenLB) = tempPk_1(flag,i+2*preEpochLen);
+
+                        m_Rp(n+m_const_param+epochLenLB,saveFlag+m_const_param) = tempPk_1(flag+preEpochLen,i);// for L1 AMB
+                        m_Rp(n+m_const_param+epochLenLB,saveFlag+m_const_param+epochLenLB) = tempPk_1(flag+preEpochLen,i+preEpochLen);// for L1 AMB
+                        m_Rp(n+m_const_param+epochLenLB,saveFlag+m_const_param+2*epochLenLB) = tempPk_1(flag+preEpochLen,i+2*preEpochLen);// for L1 AMB
+
+                        m_Rp(n+m_const_param+2*epochLenLB,saveFlag+m_const_param) = tempPk_1(flag+2*preEpochLen,i);// for L2 AMB
+                        m_Rp(n+m_const_param+2*epochLenLB,saveFlag+m_const_param+epochLenLB) = tempPk_1(flag+2*preEpochLen,i+preEpochLen);// for L2 AMB
+                        m_Rp(n+m_const_param+2*epochLenLB,saveFlag+m_const_param+2*epochLenLB) = tempPk_1(flag+2*preEpochLen,i+2*preEpochLen);// for L2 AMB
+                    }
+
+                }//if (i < 5)
+            }//for (int i = 0;i < tempPk_1.cols();i++)
+
+        }
+        else
+        {
+            //New satellite ambiguity calculation
+            SatlitData oneStalit = epochSatlitData.at(n);
+            double oneStalit_lamda1 = M_C/oneStalit.Frq[0],oneStalit_lamda2 = M_C/oneStalit.Frq[1];
+            // for ION
+            m_Rp(n+m_const_param,n+m_const_param) = 1;
+            m_Zp(n+m_const_param,0) = m_Xk(n+m_const_param,0) * 1;
+            // for L1 amb
+            m_Rp(n+m_const_param+epochLenLB,n+m_const_param+epochLenLB) = oneStalit_lamda1;
+            m_Zp(n+m_const_param+epochLenLB,0) = m_Xk(n+m_const_param+epochLenLB,0) * oneStalit_lamda1;
+            // for L2 amb
+            m_Rp(n+m_const_param+2*epochLenLB,n+m_const_param+2*epochLenLB) = oneStalit_lamda2;
+            m_Zp(n+m_const_param+2*epochLenLB,0) = m_Xk(n+m_const_param+2*epochLenLB,0) * oneStalit_lamda2;
+
+            // set Rwk
+            m_Rwk(n+m_const_param, n+m_const_param) = sqrt(m_ion_Qw); // set new ION noise matrix m_Rwk (this's important)
+            m_Rwk(n+m_const_param+epochLenLB, n+m_const_param+epochLenLB) = sqrt(m_amb_Qw); // set new L1 ambiguity noise matrix m_Rwk (this's important)
+            m_Rwk(n+m_const_param+2*epochLenLB, n+m_const_param+2*epochLenLB) = sqrt(m_amb_Qw); // set new L1 ambiguity noise matrix m_Rwk (this's important)
+
+            for (int i = 0;i < m_const_param;i++)
+            {
+                m_Rp(n+m_const_param+epochLenLB,i) = 0;
+                m_Rp(i,n+m_const_param+epochLenLB) = 0;
+                m_Rp(n+m_const_param+2*epochLenLB,i) = 0;
+                m_Rp(i,n+m_const_param+2*epochLenLB) = 0;
+            }
+        }
+    }//Pk_1 saves the data
+    MatrixXd error = m_Rp*m_Xk - m_Zp;
+//    m_matrix.writeCSV("m_Rp.csv", m_Rp);
+//    m_matrix.writeCSV("tempPk_1.csv", tempPk_1);
 
     m_VarChang = true;
 }
@@ -534,11 +885,195 @@ void SRIFAlgorithm::Obtaining_equation(QVector< SatlitData > &currEpoch, double 
     }//if(no_zero > 0)
 }
 
+
+// get matrix B and observer L for No Combination
+void SRIFAlgorithm::Obtaining_equation_NoCombination(QVector< SatlitData > &currEpoch, double *m_ApproxRecPos, MatrixXd &mat_B, VectorXd &Vct_L,
+                             MatrixXd &mat_P)
+{
+    int epochLenLB = currEpoch.length(), const_num = 3;
+    MatrixXd B, P;
+    VectorXd L, sys_len;
+    sys_len.resize(m_sys_str.length());
+    sys_len.setZero();
+    switch(m_SRIF_MODEL)
+    {
+    case SRIF_MODEL::SPP_STATIC:
+    case SRIF_MODEL::SPP_KINEMATIC:
+        B.resize(2*epochLenLB,m_const_param+epochLenLB);
+        P.resize(2*epochLenLB,2*epochLenLB);
+        L.resize(2*epochLenLB);
+        const_num = 3;// 3 is conntain [dx,dy,dz]
+        break;
+    case SRIF_MODEL::PPP_KINEMATIC:
+    case SRIF_MODEL::PPP_STATIC:
+        B.resize(4*epochLenLB,3*epochLenLB+m_const_param);
+        P.resize(4*epochLenLB,4*epochLenLB);
+        L.resize(4*epochLenLB);
+        const_num = 4;// 4 is conntain [dx,dy,dz,mf]
+        break;
+    default:
+        ErroTrace("QKalmanFilter::Obtaining_equation you should use setModel().");
+        break;
+    }
+    // init matrix
+    B.setZero();
+    L.setZero();
+    P.setIdentity();
+
+    bool is_find_base_sat = false;
+    for (int i = 0; i < epochLenLB;i++)
+    {
+        SatlitData oneSatlit = currEpoch.at(i);
+        double li = 0,mi = 0,ni = 0,p0 = 0,dltaX = 0,dltaY = 0,dltaZ = 0;
+        dltaX = oneSatlit.X - m_ApproxRecPos[0];
+        dltaY = oneSatlit.Y - m_ApproxRecPos[1];
+        dltaZ = oneSatlit.Z - m_ApproxRecPos[2];
+        p0 = qSqrt(dltaX*dltaX+dltaY*dltaY+dltaZ*dltaZ);
+        // compute li mi ni
+        li = dltaX/p0;mi = dltaY/p0;ni = dltaZ/p0;
+        //Correction of each
+        double dlta = 0;
+        dlta =  - oneSatlit.StaClock + oneSatlit.SatTrop - oneSatlit.Relativty -
+            oneSatlit.Sagnac - oneSatlit.TideEffect - oneSatlit.AntHeight;
+        // set B L P
+        double LP_whight  = m_LP_whight;
+        double F1 = oneSatlit.Frq[0], F2 = oneSatlit.Frq[1];
+        double lamda1 = M_C/F1, lamda2 = M_C/F2;
+        switch(m_SRIF_MODEL)
+        {
+        case SRIF_MODEL::SPP_STATIC:
+        case SRIF_MODEL::SPP_KINEMATIC:
+            //Computational B matrix
+            //L3 carrier matrix
+            B(2*i,0) = li;B(2*i,1) = mi;B(2*i,2) = ni;B(2*i,3) = -1;
+            B(2*i+1,0) = li;B(2*i+1,1) = mi;B(2*i+1,2) = ni;B(2*i+1,3) = -1;
+            B(2*i,i+m_const_param) = -1;// ION for P1
+            B(2*i+1,i+m_const_param) = -(F1*F1)/(F2*F2);// ION for P2
+            // debug by xiaogongwei 2019.04.03 for ISB
+            for(int k = 1; k < m_sys_str.length();k++)
+            {
+                if(m_sys_str[k] == oneSatlit.SatType)
+                {
+                    B(2*i,3+k) = -1;
+                    B(2*i+1,3+k) = -1;
+                    sys_len[k] = 1;//good no zeros cloumn in B,sys_lenmybe 0 1 1 0(debug by xiaogongwei 2019.04.09 for ISB)
+                }
+            }
+            // debug by xiaogongwei 2019.04.10 is exist base system satlite clk
+            if(m_sys_str[0] == oneSatlit.SatType)
+                is_find_base_sat = true;
+            //Pseudorange code not use KALMAN_SMOOTH_RANGE::SMOOTH
+            //Pseudorange code L
+            if(SRIF_SMOOTH_RANGE::SMOOTH == m_SRIF_SMOOTH_RANGE)
+            {
+                L(2*i) = p0 - oneSatlit.CC1_Smooth + dlta;
+                L(2*i+1) = p0 - oneSatlit.CC2_Smooth + dlta;
+                P(2*i, 2*i) = 1 / oneSatlit.CC1_Smooth_Q;// Pseudo-range Wight
+                P(2*i+1, 2*i+1) = 1 / oneSatlit.CC2_Smooth_Q;// Pseudo-range Wight
+            }
+            else
+            {
+                L(2*i) = p0 - oneSatlit.C1 + dlta;
+                L(2*i+1) = p0 - oneSatlit.C2 + dlta;
+                P(2*i, 2*i) = oneSatlit.SatWight;
+                P(2*i+1, 2*i+1) = oneSatlit.SatWight;
+            }
+            break;
+        case SRIF_MODEL::PPP_KINEMATIC:
+        case SRIF_MODEL::PPP_STATIC:
+            //Computational B matrix
+            //L carrier matrix
+            B(2*i,0) = li;B(2*i,1) = mi;B(2*i,2) = ni;B(2*i,3) = -oneSatlit.StaTropMap;B(2*i,4) = -1; // L1
+            B(2*i+1,0) = li;B(2*i+1,1) = mi;B(2*i+1,2) = ni;B(2*i+1,3) = -oneSatlit.StaTropMap;B(2*i+1,4) = -1; // L2
+            B(2*i,i+m_const_param) = +1;// ION for L1
+            B(2*i+1,i+m_const_param) = +(F1*F1)/(F2*F2);// ION for L2
+            B(2*i,i+m_const_param+epochLenLB) = lamda1;// N1 for L1
+            B(2*i+1,i+m_const_param+2*epochLenLB) = lamda2;// N2 for L2
+
+            //P pseudorange code matrix
+            B(2*i+2*epochLenLB,0) = li;B(2*i+2*epochLenLB,1) = mi;B(2*i+2*epochLenLB,2) = ni;B(2*i+2*epochLenLB,3) = -oneSatlit.StaTropMap;B(2*i+2*epochLenLB,4) = -1;
+            B(2*i+2*epochLenLB+1,0) = li;B(2*i+2*epochLenLB+1,1) = mi;B(2*i+2*epochLenLB+1,2) = ni;B(2*i+2*epochLenLB+1,3) = -oneSatlit.StaTropMap;B(2*i+2*epochLenLB+1,4) = -1;
+            B(2*i+2*epochLenLB,i+m_const_param) = -1;// ION for P1
+            B(2*i+2*epochLenLB+1,i+m_const_param) = -(F1*F1)/(F2*F2);// ION for P2
+
+            // debug by xiaogongwei 2019.04.03 for ISB
+            for(int k = 1; k < m_sys_str.length();k++)
+            {
+                if(m_sys_str[k] == oneSatlit.SatType)
+                {
+                    B(2*i,const_num+k) = -1;
+                    B(2*i+1,const_num+k) = -1;
+                    B(2*i+2*epochLenLB,const_num+k) = -1;
+                    B(2*i+2*epochLenLB+1,const_num+k) = -1;
+                    sys_len[k] = 1;//good no zeros cloumn in B,sys_lenmybe 0 1 1 0(debug by xiaogongwei 2019.04.09 for ISB)
+                }
+            }
+            // debug by xiaogongwei 2019.04.10 is exist base system satlite clk
+            if(m_sys_str[0] == oneSatlit.SatType)
+                is_find_base_sat = true;
+            //Carrier L  pseudorange code L
+            L(2*i) = p0 - oneSatlit.LL1 + dlta;
+            L(2*i+1) = p0 - oneSatlit.LL2 + dlta;
+            L(2*i+2*epochLenLB) = p0 - oneSatlit.CC1 + dlta;
+            L(2*i+2*epochLenLB+1) = p0 - oneSatlit.CC2 + dlta;
+            // Computing weight matrix P
+            P(2*i, 2*i) = oneSatlit.SatWight * LP_whight;// Carrier L1 weight
+            P(2*i+1, 2*i+1) = oneSatlit.SatWight * LP_whight;// Carrier L2 weight
+            P(2*i + epochLenLB, 2*i + epochLenLB) = oneSatlit.SatWight;// Pseudo-range C1 weight
+            P(2*i + epochLenLB+1, 2*i + epochLenLB+1) = oneSatlit.SatWight;// Pseudo-range C2 weight
+            break;
+        default:
+            ErroTrace("QKalmanFilter::Obtaining_equation you should use setModel().");
+            break;
+        }//switch(m_KALMAN_MODEL)
+
+    }//B, L is calculated
+    // save data to mat_B
+    mat_B = B;
+    Vct_L = L;
+    mat_P = P;
+//    m_matrix.writeCSV("./csv/mat_B.csv", mat_B);
+//    m_matrix.writeCSV("./csv/mat_P.csv", mat_P);
+    // debug by xiaogongwei 2019.04.04
+    int no_zero = sys_len.size() - 1 - sys_len.sum();
+    if(no_zero > 0 || !is_find_base_sat)
+    {
+        int new_hang = B.rows() + no_zero, new_lie = B.cols(), flag = 0;
+        if(!is_find_base_sat) new_hang++; // debug by xiaogongwei 2019.04.10 is exist base system satlite clk
+        mat_B.resize(new_hang,new_lie);
+        mat_P.resize(new_hang,new_hang);
+        Vct_L.resize(new_hang);
+
+        mat_B.setZero();
+        Vct_L.setZero();
+        mat_P.setIdentity();
+        // debug by xiaogongwei 2019.04.10 is exist base system satlite clk
+        if(!is_find_base_sat)
+        {
+            for(int i = 0;i < B.rows();i++)
+                B(i, const_num) = 0;
+            mat_B(mat_B.rows() - 1, const_num) = 1;
+        }
+        mat_B.block(0,0,B.rows(),B.cols()) = B;
+        mat_P.block(0,0,P.rows(),P.cols()) = P;
+        Vct_L.head(L.rows()) = L;
+
+        for(int i = 1; i < sys_len.size();i++)
+        {
+            if(0 == sys_len[i])
+            {
+                mat_B(B.rows()+flag, const_num+i) = 1;
+                flag++;
+            }
+        }
+    }//if(no_zero > 0)
+//    m_matrix.writeCSV("./csv/mat_B1.csv", mat_B);
+//    m_matrix.writeCSV("./csv/mat_P1.csv", mat_P);
+}
+
 bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< SatlitData > &currEpoch,
                                   double *m_ApproxRecPos,VectorXd &X,MatrixXd &P)
 {
-    int epochLenLB = currEpoch.length();
-
     // use spp get postion
     if (!m_isInitPara)
     {
@@ -564,6 +1099,12 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
     double temp_SPP_POS[3] = {0};
     memcpy(temp_SPP_POS, m_SPP_Pos, 3*sizeof(double));
 
+    // use spp clk as priori value for base clk
+    SRIFAlgorithm::SRIF_MODEL srif_model = getModel();
+    if(srif_model == SRIFAlgorithm::SRIF_MODEL::SPP_STATIC || srif_model == SRIFAlgorithm::SRIF_MODEL::SPP_KINEMATIC)
+        m_Xk(3) =  m_ApproxRecPos[3];
+    else
+        m_Xk(4) =  m_ApproxRecPos[3];
     // filter
     filter(preEpoch, currEpoch, X, P);
 
@@ -574,38 +1115,44 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
         minSatNum = 1;
     else
         minSatNum = 5;
-
     while(gross_LC)
     {
         // get B, wightP ,L
         MatrixXd B, wightP;
         VectorXd L, delate_LC;
-        Obtaining_equation(currEpoch, m_SPP_Pos, B, L, wightP);
+        if(getPPPModel() == PPP_MODEL::PPP_Combination)
+            Obtaining_equation(currEpoch, m_SPP_Pos, B, L, wightP);
+        else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+            Obtaining_equation_NoCombination(currEpoch, m_SPP_Pos, B, L, wightP);
 
+        // detect gross error
+        int sat_len = currEpoch.length();
         if(m_SRIF_MODEL == SRIF_MODEL::SPP_STATIC || m_SRIF_MODEL == SRIF_MODEL::SPP_KINEMATIC)
         {
-            gross_LC = m_qualityCtrl.VtPVCtrl_Filter_C(B, L, m_Xk, delate_LC, currEpoch.length());// QC pesoderange
+            gross_LC = m_qualityCtrl.VtPVCtrl_Filter_C(B, L, m_Xk, delate_LC, sat_len);// QC pesoderange
         }
         else
         {
-            gross_LC = m_qualityCtrl.VtPVCtrl_Filter_LC(B, L, m_Xk, delate_LC, currEpoch.length());// QC for carrire and pesoderange
+            if(getPPPModel() == PPP_MODEL::PPP_Combination)
+                gross_LC = m_qualityCtrl.VtPVCtrl_Filter_LC(B, L, m_Xk, delate_LC, sat_len);// QC for carrire and pesoderange
+            else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+                gross_LC = m_qualityCtrl.VtPVCtrl_Filter_LC_NoCombination(B, L, m_Xk, delate_LC, sat_len);// QC for carrire and pesoderange
         }
         max_iter--;
         if(gross_LC == false || max_iter <= 0) break;
         // delate gross Errors Satlites form end for start.
         QVector<int> del_flag;
-        for(int i = epochLenLB - 1; i >= 0;i--)
+        for(int i = sat_len - 1; i >= 0;i--)
         {
             if(0 != delate_LC[i])
                 del_flag.append(i);
         }
         // delete gross Errors
         int del_len = del_flag.length();
-        if(epochLenLB - del_len >= minSatNum)
+        if(currEpoch.length() - del_len >= minSatNum)
         {
             for(int i = 0; i < del_len;i++)
                 currEpoch.remove(del_flag[i]);
-            epochLenLB = currEpoch.length();// update epochLenLB
 
             // restore filter state
             m_Rp = temp_Rp; m_Zp = temp_Zp; m_Phi_Inv = temp_Phi_Inv; m_G = temp_G;
@@ -625,28 +1172,54 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
     MatrixXd B, wightP;
     VectorXd L, Vk;
     int sat_len = currEpoch.length();
-    Obtaining_equation(currEpoch, m_SPP_Pos, B, L, wightP);
+    if(getPPPModel() == PPP_MODEL::PPP_Combination)
+        Obtaining_equation(currEpoch, m_SPP_Pos, B, L, wightP);
+    else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+        Obtaining_equation_NoCombination(currEpoch, m_SPP_Pos, B, L, wightP);
     Vk = B*m_Xk - L;
     if(m_SRIF_MODEL == SRIF_MODEL::SPP_STATIC || m_SRIF_MODEL == SRIF_MODEL::SPP_KINEMATIC)
     {
-        for(int i = 0; i < sat_len;i++)
+        if(getPPPModel() == PPP_MODEL::PPP_Combination)
         {
-            currEpoch[i].VLL3 = 0;
-            currEpoch[i].VPP3 = Vk[i];
+            for(int i = 0; i < sat_len;i++)
+            {
+                currEpoch[i].VLL3 = 0;
+                currEpoch[i].VPP3 = Vk[i];
+            }
+        }
+        else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+        {
+            for(int i = 0; i < sat_len;i++)
+            {
+                currEpoch[i].VL1 = 0; currEpoch[i].VL2 = 0;
+                currEpoch[i].VC1 = Vk[2*i]; currEpoch[i].VC2 = Vk[2*i+1];
+            }
         }
     }
     else
     {
-        for(int i = 0; i < sat_len;i++)
+        if(getPPPModel() == PPP_MODEL::PPP_Combination)
         {
-            currEpoch[i].VLL3 = Vk[i];
-            currEpoch[i].VPP3 = Vk[i+sat_len];
+            for(int i = 0; i < sat_len;i++)
+            {
+                currEpoch[i].VLL3 = Vk[i];
+                currEpoch[i].VPP3 = Vk[i+sat_len];
+            }
         }
+        else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+        {
+            for(int i = 0; i < sat_len;i++)
+            {
+                currEpoch[i].VL1 = Vk[2*i]; currEpoch[i].VL2 = Vk[2*i+1];
+                currEpoch[i].VC1 = Vk[2*i+2*sat_len]; currEpoch[i].VC2 = Vk[2*i+2*sat_len+1];
+            }
+        }
+
     }
 
     //Save the results of this epoch (does not contain initialization data)
     X = m_Xk;
-    P = (m_Rp.transpose()*m_Rp).inverse();
+    P =  (m_Rp.transpose()*m_Rp).inverse();
     if(gross_LC)
     {
         // restore filter state
@@ -657,13 +1230,17 @@ bool SRIFAlgorithm::SRIFforStatic(QVector< SatlitData > &preEpoch,QVector< Satli
         X.setZero();
         P.setIdentity();
         P = P * 1e10;
+        // add bad flag 999 for filter bad
+        for(int i = 0;i < currEpoch.length();i++)
+            currEpoch[i].EpochFlag = 999;
     }
-
-
-    // update m_ApproxRecPos use SRIF
-    m_ApproxRecPos[0] = m_SPP_Pos[0] + m_Xk(0);
-    m_ApproxRecPos[1] = m_SPP_Pos[1] + m_Xk(1);
-    m_ApproxRecPos[2] = m_SPP_Pos[2] + m_Xk(2);
+    else
+    {
+        // update m_ApproxRecPos use SRIF
+        m_ApproxRecPos[0] = m_SPP_Pos[0] + m_Xk(0);
+        m_ApproxRecPos[1] = m_SPP_Pos[1] + m_Xk(1);
+        m_ApproxRecPos[2] = m_SPP_Pos[2] + m_Xk(2);
+    }
 
     return (!gross_LC);
 }
@@ -676,12 +1253,20 @@ void SRIFAlgorithm::filter(QVector< SatlitData > &preEpoch,QVector< SatlitData >
     // get B, wightP ,L
     MatrixXd B, wightP;
     VectorXd L;
-    Obtaining_equation(currEpoch, m_SPP_Pos, B, L, wightP);
+    if(getPPPModel() == PPP_MODEL::PPP_Combination)
+        Obtaining_equation(currEpoch, m_SPP_Pos, B, L, wightP);
+    else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+        Obtaining_equation_NoCombination(currEpoch, m_SPP_Pos, B, L, wightP);
+
 
     //First epoch initialization  Fillter init
     if (0 == preEpochLen)
     {
-        initSRIFPara(currEpoch,B,L);
+        if(getPPPModel() == PPP_MODEL::PPP_Combination)
+            initSRIFPara(currEpoch,B,L);
+        else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+            initSRIFPara_NoCombination(currEpoch,B,L);
+
         // if have P matrix use P.this is back smooth
         if(P.rows() > 1)
         {
@@ -694,7 +1279,11 @@ void SRIFAlgorithm::filter(QVector< SatlitData > &preEpoch,QVector< SatlitData >
     }
 
     //Update Rk_1 (the number of satellites has not changed at this time)
-    updatePk(currEpoch, B.rows());
+    if(getPPPModel() == PPP_MODEL::PPP_Combination)
+        updatePk(currEpoch, B.rows());
+    else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+        updatePk_NoCombination(currEpoch, B.rows());
+
 
     //Determine whether the number of satellites has changed (comparison of two epochs before and after)
     QVector< int > oldPrnFlag;//Compared with the location of the same satellite in the previous epoch, it is not found with -1
@@ -718,9 +1307,13 @@ void SRIFAlgorithm::filter(QVector< SatlitData > &preEpoch,QVector< SatlitData >
     {
         //Increase or decrease n satellites
         if (((preEpochLen != epochLenLB) || isNewSatlite ) && preEpochLen != 0)
-            changeSRIFPara(currEpoch,oldPrnFlag, preEpochLen);//Update all SRIF parameter data sizes
+        {
+            if(getPPPModel() == PPP_MODEL::PPP_Combination)
+                changeSRIFPara(currEpoch,oldPrnFlag, preEpochLen);//Update all SRIF parameter data sizes
+            else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+                changeSRIFPara_NoCombination(currEpoch,oldPrnFlag, preEpochLen);//Update all SRIF parameter data sizes
+        }
     }
-
     //Version SRIF filtering
     m_Xk = SRIFilter(matB, matL);// update m_Xk
 }
@@ -785,6 +1378,47 @@ void SRIFAlgorithm::updatePk(QVector< SatlitData > &currEpoch, int B_len)
             SatlitData oneSatlit = currEpoch.at(i);
             m_Pk(i,i) = m_LP_whight*oneSatlit.SatWight;//Carrier equation weight (small noise)(Debug by xiaogongwei 2018.12.04;)
             m_Pk(i+epochLenLB,i+epochLenLB) = oneSatlit.SatWight;//Smoothing the right of pseudo-range equation(noise)
+        }
+    }
+}
+
+// update Pk(Observation wight)
+void SRIFAlgorithm::updatePk_NoCombination(QVector< SatlitData > &currEpoch, int B_len)
+{
+    int epochLenLB = currEpoch.length();
+
+    //Update Rk_1 (the number of satellites has not changed at this time)
+    if(m_SRIF_MODEL == SRIF_MODEL::SPP_STATIC || m_SRIF_MODEL == SRIF_MODEL::SPP_KINEMATIC)
+    {
+        m_Pk.resize(B_len,B_len);
+        m_Pk.setIdentity();
+        for (int i = 0;i < epochLenLB;i++)
+        {
+            SatlitData oneSatlit = currEpoch.at(i);
+
+            if(SRIF_SMOOTH_RANGE::SMOOTH == m_SRIF_SMOOTH_RANGE)
+            {
+                m_Pk(2*i, 2*i) = 1/oneSatlit.CC1_Smooth_Q;//wight of C1 pseudorange equations Reciprocal (noise)
+                m_Pk(2*i+1, 2*i+1) = 1/oneSatlit.CC2_Smooth_Q;//wight C2 of pseudorange equations Reciprocal (noise)
+            }
+            else
+            {
+                m_Pk(2*i, 2*i) = oneSatlit.SatWight;//wight of C1  pseudorange equations Reciprocal (noise)
+                m_Pk(2*i+1, 2*i+1) = oneSatlit.SatWight;//wight of C2 pseudorange equations Reciprocal (noise)
+            }
+        }
+    }
+    else
+    {
+        m_Pk.resize(B_len,B_len);
+        m_Pk.setIdentity();
+        for (int i = 0;i < epochLenLB;i++)
+        {
+            SatlitData oneSatlit = currEpoch.at(i);
+            m_Pk(2*i,2*i) = m_LP_whight * oneSatlit.SatWight;//wight of carrier equation Reciprocal (small noise)// 1/25000 =4e-4
+            m_Pk(2*i+1,2*i+1) = m_LP_whight * oneSatlit.SatWight;//wight of carrier equation Reciprocal (small noise)// 1/25000 =4e-4
+            m_Pk(2*i+epochLenLB,2*i+epochLenLB) = oneSatlit.SatWight;//wight of pseudorange equations Reciprocal (noise)
+            m_Pk(2*i+epochLenLB+1,2*i+epochLenLB+1) = oneSatlit.SatWight;//wight of pseudorange equations Reciprocal (noise)
         }
     }
 }
@@ -946,7 +1580,7 @@ void SRIFAlgorithm::SRIFTimeUpdate(MatrixXd &Rp, MatrixXd &Zp, MatrixXd &Phi_Inv
 	tempRes = Rp*Phi_Inv;
 	// copy tempRes to allMat bottom center corner
 	allMat.block(Rwk_1->rows(), G.cols(), tempRes.rows(), tempRes.cols()) =
-			tempRes;
+            tempRes;
 	// compute -Rp*PhiInv*G, store in tempPhiInv = -Rwk_1*PhiInv*G
 	tempPhiInv = -tempRes*G;
 	// copy tempPhiInv to allMat bottom left corner

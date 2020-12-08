@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -33,9 +33,8 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 
 
@@ -53,12 +52,14 @@
 #include <QPoint>
 #include <QString>
 #include <QAction>
+#include <QProcess>
 
 #include "QPPPModel.h"
 #include "QPPPBackSmooth.h"
 #include "QSPPModel.h"
 #include "QBatchProcess.h"
 #include "QtPPPGUI/qtplot.h"
+
 
 
 namespace Ui {
@@ -80,8 +81,11 @@ public slots:
     void RunSPP();// Run Single Station PPP
     void RunPPPBatch();// Run Batches Station PPP
     void AboutApp();
+
 protected:
     void closeEvent(QCloseEvent *event);
+    void paintEvent(QPaintEvent *);
+
 
 private:
     void initWindow();
@@ -90,11 +94,12 @@ private:
     void plotSigleStation(PlotGUIData &station_data);
     void clearPlotGUIData(PlotGUIData &station_data);
     bool isDirExist(QString fullPath);
+    QVector<QStringList> getConfObsType();
 
 private:
     Ui::MainWindow *ui;
     QtPlot *mp_qtPlot;
-    QString m_station_path;// obsvertion path
+    QString m_station_path, m_App_floder;// obsvertion path
     bool m_isRuned;
     bool m_isRunedBatch;
     int m_Display_Max_line;
@@ -102,8 +107,8 @@ private:
     QVector< PlotGUIData > m_mutiply_data;//store Big data in m_mutiply_data before Run
     QStringList m_mutiply_names;// store multiply stations
     // menu bar
-    QAction *m_AboutAct;
     QMenu *m_otherMenu;
+    ConfigWidget m_ConfigWidget;
 
 };
 

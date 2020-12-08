@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -33,9 +33,8 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 
 #ifndef QBATCHPROCESS_H
@@ -60,7 +59,8 @@ class QBatchProcess
 {
 public:
     QBatchProcess(QString files_path, QTextEdit *pQTextEdit = NULL, QString Method = "Kalman", QString Satsystem = "G", QString TropDelay = "Sass",
-                  double CutAngle = 10, bool isKinematic = false, QString Smooth_Str = "NoSmooth", bool isBackBatch = false);
+                  double CutAngle = 10, bool isKinematic = false, QString Smooth_Str = "NoSmooth", bool isBackBatch = false,
+                  QString products = "igs", QString pppmodel_t = "Ion_free");
     ~QBatchProcess();
     bool Run(bool isDisplayEveryEpoch = false);//isDisplayEveryEpoch represent is disply every epoch information?(ENU or XYZ)
     void getStoreAllData(QVector<PlotGUIData> &all_SationData);
@@ -83,6 +83,8 @@ private:
     QString m_TropDelay;
     QString m_Satsystem;
     QString m_Smooth_Str;
+    QString m_Product;// value is "igs" or "cnt"
+    QString m_PPPModel_Str;// // value is "Ion_free" or "Uncombined"
     bool m_isKinematic;
     bool m_isBackBatch;
     double m_CutAngle;

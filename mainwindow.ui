@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>730</width>
+    <width>791</width>
     <height>522</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MG-APP</string>
+   <string>MG-APPS</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLineEdit" name="textEdit_FilePath">
@@ -52,7 +52,7 @@
      <rect>
       <x>10</x>
       <y>38</y>
-      <width>521</width>
+      <width>611</width>
       <height>91</height>
      </rect>
     </property>
@@ -105,7 +105,7 @@
     <widget class="QLabel" name="label_2">
      <property name="geometry">
       <rect>
-       <x>143</x>
+       <x>137</x>
        <y>30</y>
        <width>61</width>
        <height>17</height>
@@ -118,7 +118,7 @@
     <widget class="QComboBox" name="comboBox_Method">
      <property name="geometry">
       <rect>
-       <x>130</x>
+       <x>124</x>
        <y>50</y>
        <width>86</width>
        <height>30</height>
@@ -139,14 +139,19 @@
        <string>SRIF</string>
       </property>
      </item>
+     <item>
+      <property name="text">
+       <string>KalmanOu</string>
+      </property>
+     </item>
     </widget>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
-       <x>240</x>
-       <y>30</y>
+       <x>222</x>
+       <y>26</y>
        <width>101</width>
-       <height>17</height>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
@@ -156,8 +161,8 @@
     <widget class="QLabel" name="label_5">
      <property name="geometry">
       <rect>
-       <x>360</x>
-       <y>30</y>
+       <x>433</x>
+       <y>32</y>
        <width>71</width>
        <height>17</height>
       </rect>
@@ -169,9 +174,9 @@
     <widget class="QCheckBox" name="checkBox_Kinematic">
      <property name="geometry">
       <rect>
-       <x>360</x>
-       <y>50</y>
-       <width>92</width>
+       <x>433</x>
+       <y>52</y>
+       <width>71</width>
        <height>30</height>
       </rect>
      </property>
@@ -181,7 +186,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Kinematic</string>
+      <string>Kin</string>
      </property>
      <property name="checked">
       <bool>false</bool>
@@ -190,8 +195,8 @@
     <widget class="QLineEdit" name="lineEdit_Angle">
      <property name="geometry">
       <rect>
-       <x>243</x>
-       <y>50</y>
+       <x>225</x>
+       <y>51</y>
        <width>81</width>
        <height>30</height>
       </rect>
@@ -205,13 +210,93 @@
       <string>10</string>
      </property>
     </widget>
+    <widget class="QGroupBox" name="groupBox_6">
+     <property name="geometry">
+      <rect>
+       <x>510</x>
+       <y>12</y>
+       <width>91</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Products</string>
+     </property>
+     <widget class="QRadioButton" name="radioButton_igs">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>25</y>
+        <width>61</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>final</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_cnt">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>46</y>
+        <width>51</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>cnt</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QComboBox" name="comboBox_PPPModel">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>50</y>
+       <width>100</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <item>
+      <property name="text">
+       <string>Ion_free</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Uncombined</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>333</x>
+       <y>30</y>
+       <width>75</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>PPPModel</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>540</x>
-      <y>40</y>
-      <width>191</width>
+      <x>626</x>
+      <y>38</y>
+      <width>151</width>
       <height>131</height>
      </rect>
     </property>
@@ -302,7 +387,7 @@
      <rect>
       <x>10</x>
       <y>280</y>
-      <width>711</width>
+      <width>771</width>
       <height>191</height>
      </rect>
     </property>
@@ -312,7 +397,7 @@
      <rect>
       <x>10</x>
       <y>136</y>
-      <width>521</width>
+      <width>411</width>
       <height>71</height>
      </rect>
     </property>
@@ -322,8 +407,8 @@
     <widget class="QPushButton" name="pushButton_Run">
      <property name="geometry">
       <rect>
-       <x>150</x>
-       <y>25</y>
+       <x>290</x>
+       <y>20</y>
        <width>89</width>
        <height>30</height>
       </rect>
@@ -340,8 +425,8 @@
     <widget class="QPushButton" name="pushButton_RunBatch">
      <property name="geometry">
       <rect>
-       <x>270</x>
-       <y>25</y>
+       <x>100</x>
+       <y>20</y>
        <width>141</width>
        <height>30</height>
       </rect>
@@ -355,36 +440,11 @@
       <string>Run(Batch)</string>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBox_PPP_SMOOTH">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>25</y>
-       <width>116</width>
-       <height>30</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-      </font>
-     </property>
-     <item>
-      <property name="text">
-       <string>NoSmooth</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Smooth</string>
-      </property>
-     </item>
-    </widget>
     <widget class="QCheckBox" name="checkBox_Back">
      <property name="geometry">
       <rect>
-       <x>440</x>
-       <y>27</y>
+       <x>20</x>
+       <y>20</y>
        <width>61</width>
        <height>30</height>
       </rect>
@@ -414,7 +474,7 @@
     <widget class="QPushButton" name="pushButton_SPP">
      <property name="geometry">
       <rect>
-       <x>270</x>
+       <x>258</x>
        <y>25</y>
        <width>89</width>
        <height>30</height>
@@ -432,8 +492,8 @@
     <widget class="QComboBox" name="comboBox_SPP_LC">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>24</y>
+       <x>15</x>
+       <y>25</y>
        <width>86</width>
        <height>30</height>
       </rect>
@@ -532,17 +592,12 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>730</width>
-     <height>26</height>
+     <width>791</width>
+     <height>23</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="action111">
-   <property name="text">
-    <string>111</string>
-   </property>
-  </action>
  </widget>
  <resources/>
  <connections/>

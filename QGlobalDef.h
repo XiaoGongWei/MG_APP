@@ -1,8 +1,8 @@
 /*************************************************************************
-**                                                                        
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software          
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -18,18 +18,18 @@
 **  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 **
 **  GPLv3.0 License Usage
-**  This program is free software: you can redistribute it and/or modify  
-**  it under the terms of the GNU General Public License as published by  
-**  the Free Software Foundation, either version 3 of the License, or     
-**  (at your option) any later version.                                   
-**                                                                        
-**  This program is distributed in the hope that it will be useful,       
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of        
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         
-**  GNU General Public License for more details.                          
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
 **
-**  You should have received a copy of the GNU General Public License     
-**  along with this program.  If not, see http://www.gnu.org/licenses/.   
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  along with this program.  If not, see http://www.gnu.org/licenses/.
 **
 **  BSD 2-clause
 **  Copyright(c) 2007‐2013, T.Takasu, All rights reserved
@@ -53,9 +53,8 @@
 **  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 
 #ifndef _QGLOBALDEF
@@ -89,8 +88,10 @@ using namespace Eigen;
 #define MM_PI 3.1415926535897932385// Radius of circumference
 #define M_C 299792458.0 // The speed of light M
 #define M_GM 3.986005e14 // Earth's gravitational constant (m)(old value:3.986005e14)
-#define M_GMK 398600.4415 // The Earth's Gravitational Constant (km)
+#define M_GMK 398600.5 // The Earth's Gravitational Constant (km)
+#define M_GMK_GLO 398600.44 // The Earth's Gravitational Constant (km)
 #define M_We 0.000072921151467 // Earth rotation angular velocity
+#define M_We_OLD 0.00007292115 // Earth rotation angular velocity
 #define M_Re 6378137 // Reference ellipse length radius (m)
 #define M_ReK 6378.137 // Reference ellipse length radius (km)
 #define M_C20 -0.001082657 // The Second Harmonic Coefficient of Gravity Potential
@@ -118,11 +119,11 @@ static int g_GlonassK[24] = {1,-4,5,6,1,-4,5,6,-2,-7,0,-1,-2,-7,0,-1,4,-3,3,2,4,
 
 //BDS system parameters
 static double g_BDSFrq[8] = {0, 1.561098e9, 1.561098e9, 0, 0, 0, 1.26852e9, 1.20714e9};//Storage Beidou Frequency
-#define M_BDSLamtak(k) (M_C/g_BDSFrq[k])//Beidou wavelength
+#define M_BDSLamtak(k) (M_C/g_BDSFrq[k])// Beidou wavelength
 
 //Galieo system parameters
 static double g_GalieoFrq[9] = {0, 1.57542e9, 0, 0, 0, 1.17645e9, 1.27875e9, 1.20714e9, 1.191795};//Galieo Band 1 5 6 7 8 Frequency
-#define M_GalieoLamtak(k) (M_C/g_GalieoFrq[k])//Galieo wavelength
+#define M_GalieoLamtak(k) (M_C/g_GalieoFrq[k])// Galieo wavelength
 
 //PPP eliminates ionospheric combination wavelengths
 //GPS wavelength
@@ -144,22 +145,62 @@ static double g_GalieoFrq[9] = {0, 1.57542e9, 0, 0, 0, 1.17645e9, 1.27875e9, 1.2
 
 // valid integer and decimal times from 1970-1-1 to 2038-1-18
 typedef struct {        /* time struct */
-	time_t time;        /* time (s) expressed by standard time_t */
-	double sec;         /* fraction of second under 1 s */
+    time_t time;        /* time (s) expressed by standard time_t */
+    double sec;         /* fraction of second under 1 s */
 } gtime_t;
 
 typedef struct {        /* earth rotation parameter data type */
-	double mjd;         /* mjd (days) */
-	double xp,yp;       /* pole offset (rad) */
-	double xpr,ypr;     /* pole offset rate (rad/day) */
-	double ut1_utc;     /* ut1-utc (s) */
-	double lod;         /* length of day (s/day) */
+    double mjd;         /* mjd (days) */
+    double xp,yp;       /* pole offset (rad) */
+    double xpr,ypr;     /* pole offset rate (rad/day) */
+    double ut1_utc;     /* ut1-utc (s) */
+    double lod;         /* length of day (s/day) */
 } erpd_t;
 
 typedef struct {        /* earth rotation parameter type */
-	int n,nmax;         /* number and max number of data */
-	erpd_t *data;       /* earth rotation parameter data */
+    int n,nmax;         /* number and max number of data */
+    erpd_t *data;       /* earth rotation parameter data */
 } erp_t;
+
+typedef struct {        /* GLONASS broadcast ephemeris type */
+    int sat;            /* satellite number */
+    int iode;           /* IODE (0-6 bit of tb field) */
+    int frq;            /* satellite frequency number */
+    int svh,sva,age;    /* satellite health, accuracy, age of operation */
+    gtime_t toe;        /* epoch of epherides (gpst) */
+    gtime_t tof;        /* message frame time (gpst) */
+    double pos[3];      /* satellite position (ecef) (m) */
+    double vel[3];      /* satellite velocity (ecef) (m/s) */
+    double acc[3];      /* satellite acceleration (ecef) (m/s^2) */
+    double taun,gamn;   /* SV clock bias (s)/relative freq bias */
+    double dtaun;       /* delay between L1 and L2 (s) */
+} geph_t;
+
+typedef struct {        /* GPS/QZS/GAL broadcast ephemeris type */
+    int sat;            /* satellite number */
+    int iode,iodc;      /* IODE,IODC */
+    int sva;            /* SV accuracy (URA index) */
+    int svh;            /* SV health (0:ok) */
+    int week;           /* GPS/QZS: gps week, GAL: galileo week */
+    int code;           /* GPS/QZS: code on L2 */
+                        /* GAL: data source defined as rinex 3.03 */
+                        /* BDS: data source (0:unknown,1:B1I,2:B1Q,3:B2I,4:B2Q,5:B3I,6:B3Q) */
+    int flag;           /* GPS/QZS: L2 P data flag */
+                        /* BDS: nav type (0:unknown,1:IGSO/MEO,2:GEO) */
+    gtime_t toe,toc,ttr; /* Toe,Toc,T_trans */
+                        /* SV orbit parameters */
+    double A,e,i0,OMG0,omg,M0,deln,OMGd,idot;
+    double crc,crs,cuc,cus,cic,cis;
+    double toes;        /* Toe (s) in week */
+    double fit;         /* fit interval (h) */
+    double f0,f1,f2;    /* SV clock parameters (af0,af1,af2) */
+    double tgd[4];      /* group delay parameters */
+                        /* GPS/QZS:tgd[0]=TGD */
+                        /* GAL    :tgd[0]=BGD E5a/E1,tgd[1]=BGD E5b/E1 */
+                        /* CMP    :tgd[0]=BGD1,tgd[1]=BGD2 */
+    double Adot,ndot;   /* Adot,ndot for CNAV */
+} eph_t;
+
 #endif
 // customize the structure
 typedef struct _StationInfo
@@ -168,8 +209,9 @@ typedef struct _StationInfo
     double AntCorr[3];// Antenna Correction: according deltype(Usually you can't accept HENs that need to look at O files.)
     double satpos[3];
     int deltype;/* Antenna delta type (0:HEN,1:XYZ) */
+    QString locationName;// station location
+    QString RecverType;// reciver type
 }StationInfo;
-
 
 typedef struct _GPSPosTime
 {
@@ -179,27 +221,25 @@ typedef struct _GPSPosTime
     int Hours;//hour
     int Minutes;//minutes
     double Seconds;//seconds
-    double TropZHD;//Current epoch ZHD
+    double TropZHD;//Current epoch ZHD all Satlite have same ZHD in epoch
     int epochNum;//The number of epochs to which it belongs
 }GPSPosTime;
-
-
 
 typedef struct _RecivePos
 {//Receiver Approximate Coordinate Correction by Single Point Positioning
     double dX;//X or E
     double dY;//Y or N
     double dZ;//Z or U
-    double spp_pos[3];// store spp pos(Kinematic) or appromix
+    double spp_pos[3];
     int totolEpochStalitNum;//Number of satellites in an epoch
     GPSPosTime UTCtime;
 }RecivePos;
 
 typedef struct _MWLLP
 {//Parameters used to detect cycle slips
-	double MW;
-	double dL;
-	double LP;
+    double MW;
+    double dL;
+    double LP;
 }CyclySlipNum;
 
 
@@ -212,9 +252,11 @@ typedef struct _brdeph
     double TimeDiv;//Clock deviation
     double TimeMove;//Clock drift
     double TimeMoveSpeed;//Clock drift acceleration
+    int GLONASS_IODE;
     QVector< double > epochNData;//Store a data segment (GPS, BDS and Galieo are 28 7 rows GLONASS is 12 3 rows)
+    geph_t temp_geph_t;
+    eph_t temp_eph_t;
 }BrdData;
-
 
 // PPP saves the calculated data
 // Preservation of satellite data and various corrections
@@ -293,7 +335,11 @@ typedef struct _Ambiguity
 {
     int PRN;// Satellite PRN
     char SatType;// Satellite type
-    double Amb;// Ambiguity (stored in Amb for both integer and floating point Numbers)
+    double ionL1;// Calculated L1 ionospheric delay (m)
+    double EA[2];// Satellite altitude Angle and azimuth (degrees)
+    double Amb1;// Ambiguity (stored in Amb for both integer and floating point Numbers of L1)
+    double Amb2;// Ambiguity (stored in Amb for both integer and floating point Numbers of L2)
+    double Amb;// Ambiguity (stored in Amb for both integer and floating point Numbers Of Ion_free LL3)
     bool isIntAmb;// Is integer ambiguity
     GPSPosTime UTCTime;// Time stored in minutes and seconds, month, day, year, not necessarily UTC time
 }Ambiguity;
@@ -337,6 +383,7 @@ typedef struct _PlotGUI
     QString save_file_path;// Save path for drawing results
 
 }PlotGUIData;
+
 
 #endif // _QGLOBALDEF
 

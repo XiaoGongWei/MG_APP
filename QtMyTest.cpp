@@ -28,6 +28,7 @@ void testReadClk()
     myclk.setSatlitSys("G");
     myclk.getAllData();
 }
+
 void testSplash()
 {
     // add QSplashScreen
@@ -66,11 +67,6 @@ void testQVector()
     reverse(tempEpochSatlitData.begin(), tempEpochSatlitData.end());
 }
 
-void testQualityCtrl()
-{
-    QualityCtrl m_QualityCtrl;
-
-}
 
 void testTransfer()
 {
@@ -81,12 +77,13 @@ void testTransfer()
 void testFtpClient()
 {
     FtpClient m_FtpClient;
-    m_FtpClient.downloadHTTPFile("http://127.0.0.1/Online_MG_APP/resources/MatlabPlot.zip", "D:/xiao.zip");
-//    m_FtpClient.downloadHTTPFile("https://cddis.nasa.gov/archive/gnss/data/daily/2018/002/18o/abmf0020.18o.Z", "D:/abmf0020.18o.Z");
+//    m_FtpClient.downloadHTTPFile("http://127.0.0.1/Online_MG_APP/resources/MatlabPlot.zip", "D:/xiao.zip");
+//    m_FtpClient.downloadHTTPFile("http://127.0.0.1/Online_MG_APP/resources/MatlabPlot.zip", "D:/MatlabPlot.zip");
+    m_FtpClient.downloadHTTPFile("http://13018096950.wicp.vip/MG_APP/qupdater.xml", "D:/qupdater.xml");
 
     for(int i = 0;i < 0;i++)
     {
-        m_FtpClient.pushData2Http("http://127.0.0.1/testJSON.php", "{\"firstName\": \"Gongwei\", \"lastName\": \"Xiao\"}");
+//        m_FtpClient.pushData2Http("http://127.0.0.1/testJSON.php", "{\"firstName\": \"Gongwei\", \"lastName\": \"Xiao\"}");
 #ifdef _WIN32
         Sleep(1000);
 #else
@@ -97,10 +94,10 @@ void testFtpClient()
     int a = 0;
 }
 
+
 void testMain()
 {
 //    testFtpClient();
-//    testRunFolder();
     testSplash();
     int a = 0;
 }

@@ -14,7 +14,9 @@ QT += network
 TARGET = MG_APP
 TEMPLATE = app
 INCLUDEPATH += \
-./resources/myeigen
+./resources/myeigen \
+./resources/ConfigWidget
+
 
 ## openMP
 #QMAKE_CXXFLAGS += -fopenmp
@@ -56,7 +58,9 @@ SOURCES += \
     QSPPModel.cpp \
     QPPPBackSmooth.cpp \
     QtMyTest.cpp \
-    QRTWrite2File.cpp
+    QRTWrite2File.cpp \
+    resources/ConfigWidget/ConfigWidget.cpp \
+    resources/ConfigWidget/ConfTranIni.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -97,11 +101,14 @@ HEADERS += \
     QPseudoSmooth.h \
     QSPPModel.h \
     QPPPBackSmooth.h \
-    QRTWrite2File.h
+    QRTWrite2File.h \
+    resources/ConfigWidget/ConfigWidget.h \
+    resources/ConfigWidget/ConfTranIni.h
 
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    resources/ConfigWidget/ConfigWidget.ui
 
 DISTFILES += \
     Licences/README.md \

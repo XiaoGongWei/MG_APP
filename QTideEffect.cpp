@@ -419,6 +419,7 @@ void QTideEffect::getAllTideEffectENU(int Year,int Month,int Day,int Hours,int M
 	//Get the tide
     getPoleTide(Year,Month,Day,Hours,Minuts,Seconds,m_SationBLH,m_pPoleENU);
 
+
 	//Tidal effect superposition
 	pENU[0] = m_pSolidENU[0] + m_pOCEANENU[0] + m_pPoleENU[0];
 	pENU[1] = m_pSolidENU[1] + m_pOCEANENU[1] + m_pPoleENU[1];

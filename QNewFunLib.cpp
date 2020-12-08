@@ -27,3 +27,24 @@ void QNewFunLib::computeCrossPoint(Vector3d Recv1Pos,Vector3d Recv2Pos,Vector3d 
 	*crossPoint = crossPos;
 	if (talpha) *talpha = alpha;
 }
+
+bool QNewFunLib::deleteDirectory(const QString &path)
+{
+    if (path.isEmpty())
+        return false;
+
+    QDir dir(path);
+    if(!dir.exists())
+        return true;
+
+    dir.setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
+    QFileInfoList fileList = dir.entryInfoList();
+    foreach (QFileInfo fi, fileList)
+    {
+        if (fi.isFile())
+            fi.dir().remove(fi.fileName());
+        else
+            deleteDirectory(fi.absoluteFilePath());
+    }
+    return dir.rmpath(dir.absolutePath());
+}

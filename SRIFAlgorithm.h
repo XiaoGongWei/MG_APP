@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -33,9 +33,8 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 
 #ifndef SRIFALGORITHM_H_
@@ -84,6 +83,7 @@ public:
     inline SRIF_MODEL getModel() {return m_SRIF_MODEL;}
     inline void setSmoothRange(SRIF_SMOOTH_RANGE smooth_range) {m_SRIF_SMOOTH_RANGE = smooth_range;}
     inline SRIF_SMOOTH_RANGE getSmoothRange() {return m_SRIF_SMOOTH_RANGE;}
+    void setFilterParams(QVector<QStringList> Qw_Pk_LPacc);
 
 // SRIF Algorithm
 	//set transition matrix
@@ -108,15 +108,20 @@ private:
 
     // use to GNSS
     void initSRIFPara(QVector< SatlitData > &currEpoch,MatrixXd &B,VectorXd &L);
+    void initSRIFPara_NoCombination(QVector< SatlitData > &currEpoch,MatrixXd &B,VectorXd &L);
     void changeSRIFPara( QVector< SatlitData > &epochSatlitData,QVector< int >oldPrnFlag, int preEpochLen);
+    void changeSRIFPara_NoCombination( QVector< SatlitData > &epochSatlitData,QVector< int >oldPrnFlag, int preEpochLen);
     void preWhiteMatrix(MatrixXd &matB, MatrixXd &matL, MatrixXd &whiteMat, MatrixXd *matP = NULL);
     // for Kinematic
     void ls_solver(QVector< SatlitData > &currEpoch, double *m_ApproxRecPos);
     void Obtaining_equation( QVector< SatlitData > &currEpoch, double *m_ApproxRecPos, MatrixXd &mat_B, VectorXd &Vct_L,
                                  MatrixXd &mat_P);
+    void Obtaining_equation_NoCombination(QVector< SatlitData > &currEpoch, double *m_ApproxRecPos, MatrixXd &mat_B, VectorXd &Vct_L,
+                                 MatrixXd &mat_P);
     // The residual after SRIF filtering is used as gross error detection, and there exists Gross Error Cyclic filtering kickout.
     bool isSatelliteChange(QVector< SatlitData > &preEpoch,QVector< SatlitData > &currEpoch, QVector< int > &oldPrnFlag);
     void updatePk(QVector< SatlitData > &currEpoch, int B_len);// update Rk(Observation Covariance)
+    void updatePk_NoCombination(QVector< SatlitData > &currEpoch, int B_len);
     void filter(QVector< SatlitData > &preEpoch, QVector< SatlitData > &currEpoch, VectorXd &X, MatrixXd &P);
 
 // Variable
@@ -138,6 +143,8 @@ private:
     int m_sys_num;
     QString m_sys_str;
     double m_LP_whight;// Carrier and Pseudo Range Weight Ratio
+    double m_xyz_dynamic_Qw, m_zwd_Qw, m_clk_Qw, m_amb_Qw, m_ion_Qw;// Transfer of noise (Qw)
+    double m_xyz_dynamic_Pk, m_zwd_Pk, m_clk_Pk, m_amb_Pk, m_ion_Pk;// Initial covariance (Pk)
 };
 
 #endif /* SRIFALGORITHM_H_ */

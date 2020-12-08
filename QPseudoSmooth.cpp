@@ -22,6 +22,10 @@ bool QPseudoSmooth::SmoothPesudoRange(QVector < SatlitData > &prevEpochSatlitDat
             epochSatlitData[i].PP3_Smooth = epochSatlitData[i].PP3;
             epochSatlitData[i].PP3_Smooth_NUM = 1;
             epochSatlitData[i].PP3_Smooth_Q = 1 / epochSatlitData[i].SatWight;
+            epochSatlitData[i].CC1_Smooth = epochSatlitData[i].CC1;
+            epochSatlitData[i].CC1_Smooth_Q = 1 / epochSatlitData[i].SatWight;
+            epochSatlitData[i].CC2_Smooth = epochSatlitData[i].CC1;
+            epochSatlitData[i].CC2_Smooth_Q = 1 / epochSatlitData[i].SatWight;
         }
         return true;
     }
@@ -55,9 +59,20 @@ bool QPseudoSmooth::SmoothPesudoRange(QVector < SatlitData > &prevEpochSatlitDat
                 break;
             }
             // smooth data
+            // PP3
             epochSatlitData[i].PP3_Smooth = m_wa * curr_sat_data.PP3
                     + m_wb*( pre_sat_data.PP3_Smooth + curr_sat_data.LL3 - pre_sat_data.LL3);
             epochSatlitData[i].PP3_Smooth_Q = m_wa*m_wa*(1/curr_sat_data.SatWight) + m_wb*m_wb*pre_sat_data.PP3_Smooth_Q
+                    +m_wb*m_wb*(1e-4/curr_sat_data.SatWight) + m_wb*m_wb*(1e-4/pre_sat_data.SatWight);
+            // CC1
+            epochSatlitData[i].CC1_Smooth = m_wa * curr_sat_data.CC1
+                    + m_wb*( pre_sat_data.CC1_Smooth + curr_sat_data.LL1 - pre_sat_data.LL1);
+            epochSatlitData[i].CC1_Smooth_Q = m_wa*m_wa*(1/curr_sat_data.SatWight) + m_wb*m_wb*pre_sat_data.CC1_Smooth_Q
+                    +m_wb*m_wb*(1e-4/curr_sat_data.SatWight) + m_wb*m_wb*(1e-4/pre_sat_data.SatWight);
+            // CC2
+            epochSatlitData[i].CC2_Smooth = m_wa * curr_sat_data.CC2
+                    + m_wb*( pre_sat_data.CC2_Smooth + curr_sat_data.LL2 - pre_sat_data.LL2);
+            epochSatlitData[i].CC2_Smooth_Q = m_wa*m_wa*(1/curr_sat_data.SatWight) + m_wb*m_wb*pre_sat_data.CC2_Smooth_Q
                     +m_wb*m_wb*(1e-4/curr_sat_data.SatWight) + m_wb*m_wb*(1e-4/pre_sat_data.SatWight);
         }
         else
@@ -65,6 +80,10 @@ bool QPseudoSmooth::SmoothPesudoRange(QVector < SatlitData > &prevEpochSatlitDat
             epochSatlitData[i].PP3_Smooth = epochSatlitData[i].PP3;
             epochSatlitData[i].PP3_Smooth_NUM = 1;
             epochSatlitData[i].PP3_Smooth_Q = 1 / epochSatlitData[i].SatWight;
+            epochSatlitData[i].CC1_Smooth = epochSatlitData[i].CC1;
+            epochSatlitData[i].CC1_Smooth_Q = 1 / epochSatlitData[i].SatWight;
+            epochSatlitData[i].CC2_Smooth = epochSatlitData[i].CC1;
+            epochSatlitData[i].CC2_Smooth_Q = 1 / epochSatlitData[i].SatWight;
         }
 
     }

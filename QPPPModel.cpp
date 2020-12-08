@@ -18,12 +18,13 @@ QStringList QPPPModel::searchFilterFile(QString floder_path, QStringList filers)
 
 //Run the specified directory file
 QPPPModel::QPPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method, QString Satsystem,
-                     QString TropDelay, double CutAngle, bool isKinematic, QString Smooth_Str)
+                     QString TropDelay, double CutAngle, bool isKinematic, QString Smooth_Str, QString products,
+                     QString pppmodel_t, QString deleteSats, QVector<QStringList> ObsTypeSet, QVector<QStringList> Qw_Pk_LPacc)
 {
-    // Display for GUI
-    mp_QTextEditforDisplay = pQTextEdit;
     //Initialize variables
     initVar();
+    // Display for GUI
+    mp_QTextEditforDisplay = pQTextEdit;
     m_run_floder = files_path + PATHSEG;
     m_App_floder = QCoreApplication::applicationDirPath() + PATHSEG;
     // find files
@@ -99,36 +100,38 @@ QPPPModel::QPPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method,
     if(!BlqFileNamesList.isEmpty()) blqFile = BlqFileNamesList.at(0);
     if(!GrdFileNamesList.isEmpty()) grdFile = GrdFileNamesList.at(0);
 
+    // get OBS file size for real-time write file
+    QFileInfo obs_info(OfileName);
+    double obsMB = (double)(obs_info.size())/(1024.0*1024.0);
+    if(obsMB > 80) m_IS_MAX_OBS = true;
+
     // use defualt config
-    setConfigure(Method, Satsystem, TropDelay, CutAngle, isKinematic, Smooth_Str);
-
-    //// The same product was used to process the same day of observations
-//    Sp3FileNamesList.clear();
-//    Sp3FileNamesList << "D:/Testdata/ABMF0020/gbm19821.sp3"
-//                     << "D:/Testdata/ABMF0020/gbm19822.sp3"
-//                     << "D:/Testdata/ABMF0020/gbm19823.sp3";
-//    ClkFileNamesList.clear();
-//    ClkFileNamesList << "D:/Testdata/ABMF0020/gbm19821.clk"
-//                     << "D:/Testdata/ABMF0020/gbm19822.clk"
-//                     << "D:/Testdata/ABMF0020/gbm19823.clk";
-//    erpFile = "D:/Testdata/ABMF0020/igs19827.erp";
-
+    setConfigure(Method, Satsystem, TropDelay, CutAngle, isKinematic, Smooth_Str, products, pppmodel_t, deleteSats,
+                 ObsTypeSet, Qw_Pk_LPacc);
     // save data to QPPPModel
     initQPPPModel(OfileName, Sp3FileNamesList, ClkFileNamesList, erpFile, blqFile, atxFile, grdFile);
 }
-void QPPPModel::setConfigure(QString Method, QString Satsystem, QString TropDelay, double CutAngle, bool isKinematic, QString Smooth_Str)
+void QPPPModel::setConfigure(QString Method, QString Satsystem, QString TropDelay, double CutAngle,
+                             bool isKinematic, QString Smooth_Str, QString products, QString pppmodel_t,
+                             QString deleteSats, QVector<QStringList> ObsTypeSet, QVector<QStringList> Qw_Pk_LPacc)
 {
     // Configure
     m_Solver_Method = Method;// m_Solver_Method value can be "SRIF" or "Kalman"
     m_CutAngle = CutAngle;// (degree)
     m_SatSystem = Satsystem;// GPS, GLONASS, BDS, and Galieo are used respectively: the letters G, R, C, E
     m_TropDelay = TropDelay;// The tropospheric model m_TropDelay can choose Sass, Hopfiled, UNB3m
-
+    m_Product = products;
+    m_PPPModel_Str = pppmodel_t;
+    m_isKinematic = isKinematic;
+    m_deleteSats = deleteSats;
+    m_ObsTypeSet = ObsTypeSet;
+    m_Qw_Pk_LPacc = Qw_Pk_LPacc;
    //Setting up the file system  SystemStr:"G"(Turn on the GPS system);"GR":(Turn on the GPS+GLONASS system);"GRCE" (Open all), etc.
    //GPS, GLONASS, BDS, and Galieo are used respectively: the letters G, R, C, E
    setSatlitSys(Satsystem);
    m_sys_str = Satsystem;
    m_sys_num = getSystemnum();
+   m_ReadOFileClass.setWangObsType(ObsTypeSet);
    // set filter Model
    if(isKinematic)
    {
@@ -142,6 +145,9 @@ void QPPPModel::setConfigure(QString Method, QString Satsystem, QString TropDela
        m_SRIFAlgorithm.setModel(SRIFAlgorithm::SRIF_MODEL::PPP_STATIC);
        m_minSatFlag = 1;// Dynamic Settings 1, Static Settings 1
    }
+   m_KalmanClass.setFilterParams(Qw_Pk_LPacc);// set Qw and Pk for Kalman
+   m_SRIFAlgorithm.setFilterParams(Qw_Pk_LPacc);// set Qw and Pk for SRIF
+
 
    if("Smooth" == Smooth_Str)
    {
@@ -155,9 +161,30 @@ void QPPPModel::setConfigure(QString Method, QString Satsystem, QString TropDela
        m_SRIFAlgorithm.setSmoothRange(SRIFAlgorithm::SRIF_SMOOTH_RANGE::NO_SMOOTH);
        m_isSmoothRange = false;
    }
-
-   if(m_IS_MAX_OBS) m_QRTWrite2File.setPPPModel(PPP_MODEL::PPP_Combination);
-   m_isKinematic = isKinematic;
+   if(Method == "KalmanOu")
+   {
+       m_KalmanClass.setFilterMode(QKalmanFilter::KALMAN_FILLTER::KALMAN_MrOu);
+   }
+   if(m_PPPModel_Str.contains("Ion", Qt::CaseInsensitive))
+   {
+       setPPPModel(PPP_MODEL::PPP_Combination);
+       m_KalmanClass.setPPPModel(PPP_MODEL::PPP_Combination);
+       m_SRIFAlgorithm.setPPPModel(PPP_MODEL::PPP_Combination);
+       m_writeFileClass.setPPPModel(PPP_MODEL::PPP_Combination);
+       if(m_IS_MAX_OBS) m_QRTWrite2File.setPPPModel(PPP_MODEL::PPP_Combination);
+       m_qualityCtrl.setPPPModel(PPP_MODEL::PPP_Combination);
+   }
+   else if(m_PPPModel_Str.contains("Uncomb", Qt::CaseInsensitive))
+   {
+       setPPPModel(PPP_MODEL::PPP_NOCombination);
+       m_KalmanClass.setPPPModel(PPP_MODEL::PPP_NOCombination);
+       m_SRIFAlgorithm.setPPPModel(PPP_MODEL::PPP_NOCombination);
+       m_writeFileClass.setPPPModel(PPP_MODEL::PPP_NOCombination);
+       if(m_IS_MAX_OBS) m_QRTWrite2File.setPPPModel(PPP_MODEL::PPP_NOCombination);
+       m_qualityCtrl.setPPPModel(PPP_MODEL::PPP_NOCombination);
+   }
+   else
+       m_haveObsFile = false;
 }
 
 //Initialization operation
@@ -169,6 +196,7 @@ void QPPPModel::initVar()
     multReadOFile = 1000;
     m_leapSeconds = 0;
     m_isConnect = false;
+    m_isConnectCNT = false;
     m_run_floder = "";
     m_haveObsFile = false;
     m_isRuned = false;
@@ -177,28 +205,16 @@ void QPPPModel::initVar()
     m_minSatFlag = 5;// Dynamic Settings 5 or 1, Static Settings 1 in setConfigure()
     m_isSmoothRange = false;
     m_clock_jump_type = 0;
+    m_interval = -1;
+    mp_QTextEditforDisplay = NULL;
     m_IS_MAX_OBS = false;
+    m_deleteSats = "";
 }
 
 //Constructor
 void QPPPModel::initQPPPModel(QString OFileName,QStringList Sp3FileNames,QStringList ClkFileNames,QString ErpFileName,QString BlqFileName,QString AtxFileName,QString GrdFileName)
 {
     if(!m_haveObsFile) return ;// if not have observation file.
-    // get OBS file size
-    QFileInfo obs_info(OFileName);
-    double obsMB = (double)(obs_info.size())/(1024.0*1024.0);
-    if(obsMB > 80) m_IS_MAX_OBS = true;
-    // init QRTWrite2File class
-    if(m_IS_MAX_OBS)
-    {
-        QDir tempDir(m_run_floder);
-        QString floder_name = "Products_" + m_Solver_Method + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
-        if(m_isKinematic)
-            floder_name = "Products_" + m_Solver_Method + "_Kinematic_" + m_sys_str +PATHSEG;
-        QString RTwriteFloder = tempDir.absoluteFilePath(floder_name);
-        m_QRTWrite2File.setSaveFloder(RTwriteFloder);
-    }
-
 //Set up multi-system data
 //Initial various classes
     m_ReadSP3Class.setSP3FileNames(Sp3FileNames);
@@ -226,21 +242,14 @@ void QPPPModel::initQPPPModel(QString OFileName,QStringList Sp3FileNames,QString
 //Search products and download
     int GPS_Week = 0, GPS_Day = 0;
     qCmpGpsT.YMD2GPSTime(obsTime[0],obsTime[1],obsTime[2],obsTime[3],obsTime[4],Seconds, &GPS_Week, &GPS_Day);
-    //If there is no product, it is necessary to make up such products.
-    if(Sp3FileNames.isEmpty() || ClkFileNames.isEmpty() || ErpFileName.isEmpty())
+    //If there is no product, it is necessary to make up such final products.
+    if(Sp3FileNames.isEmpty() || ClkFileNames.isEmpty() || ErpFileName.isEmpty())   connectHost();
+    if(m_Product.contains("igs", Qt::CaseInsensitive))
     {
-        connectHost();
+        if(Sp3FileNames.isEmpty())  m_Sp3FileNames = downProducts(m_run_floder, GPS_Week, GPS_Day, "sp3");
+        if(ClkFileNames.isEmpty())  m_ClkFileNames = downProducts(m_run_floder, GPS_Week, GPS_Day, "clk");
     }
-    if(Sp3FileNames.isEmpty())
-    {
-        m_Sp3FileNames = downProducts(m_run_floder, GPS_Week, GPS_Day, "sp3");
-        m_ReadSP3Class.setSP3FileNames(m_Sp3FileNames);
-    }
-    if(ClkFileNames.isEmpty())
-    {
-        m_ClkFileNames = downProducts(m_run_floder, GPS_Week, GPS_Day, "clk");
-        m_ReadClkClass.setClkFileNames(m_ClkFileNames);
-    }
+    // download erp
     if(ErpFileName.isEmpty())
     {
         m_ErpFileName = downErpFile(m_run_floder, GPS_Week, GPS_Day, "erp");
@@ -248,9 +257,24 @@ void QPPPModel::initQPPPModel(QString OFileName,QStringList Sp3FileNames,QString
         m_ReadAntClass.m_CmpClass.readRepFile(ErpFileName);//  for compute sun and moon position
         qCmpGpsT.readRepFile(m_ErpFileName);
     }
+    // if download final products bad, it will download real-time cnt products
+    if(m_Product.contains("cnt", Qt::CaseInsensitive))
+    {
+        if(m_Sp3FileNames.isEmpty() || m_ClkFileNames.isEmpty())   connectCNTHost();
+        if(m_Sp3FileNames.isEmpty())  m_Sp3FileNames = downCNTProducts(m_run_floder, GPS_Week, GPS_Day, "sp3");
+        if(m_ClkFileNames.isEmpty())  m_ClkFileNames = downCNTProducts(m_run_floder, GPS_Week, GPS_Day, "clk");
+    }
+
+    // set download file name
+    if(!m_Sp3FileNames.isEmpty())   m_ReadSP3Class.setSP3FileNames(m_Sp3FileNames);
+    if(!m_ClkFileNames.isEmpty())   m_ReadClkClass.setClkFileNames(m_ClkFileNames);
+
+    // end this PPP
+    if(m_Sp3FileNames.isEmpty() || m_ClkFileNames.isEmpty())    m_haveObsFile = false;
 
 //Get skip seconds
     m_leapSeconds = qCmpGpsT.getLeapSecond(obsTime[0],obsTime[1],obsTime[2],obsTime[3],obsTime[4],Seconds);
+    m_interval = m_ReadOFileClass.getInterval();
 
 //Read the required calculation file module (time consuming)
     if(m_haveObsFile)
@@ -260,6 +284,26 @@ void QPPPModel::initQPPPModel(QString OFileName,QStringList Sp3FileNames,QString
         m_ReadTropClass.getAllData();//Read grd files for later tropospheric calculations
         m_ReadSP3Class.getAllData();//Read the entire SP3 file
         m_ReadClkClass.getAllData();//Read the clock error file for later calculation
+    }
+
+    // init QRTWrite2File class
+    if(m_IS_MAX_OBS)
+    {
+        QDir tempDir(m_run_floder);
+        // product name
+        QString Product_name = "IGS";
+        if(m_Sp3FileNames.length() > 0)
+        {
+            QString sp3name_path = m_Sp3FileNames.at(0);
+            int index_p = sp3name_path.lastIndexOf("/");// get sp3 name
+            QString sp3name = sp3name_path.mid(index_p+1);
+            Product_name = sp3name.mid(0,3).toUpper();
+        }
+        QString floder_name = Product_name + "Products_" + m_Solver_Method + "_" + m_PPPModel_Str + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
+        if(m_isKinematic)
+            floder_name = Product_name + "Products_" + m_Solver_Method + "_" + m_PPPModel_Str + "_Kinematic_" + m_sys_str +PATHSEG;
+        QString RTwriteFloder = tempDir.absoluteFilePath(floder_name);
+        m_QRTWrite2File.setSaveFloder(RTwriteFloder);
     }
 }
 
@@ -386,6 +430,8 @@ void QPPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
         for (int i = 0;i < epochSatlitData.length();i++)
         {
             SatlitData tempSatlitData = epochSatlitData.at(i);//Store calculated corrected satellite data
+            if(!isInSystem(tempSatlitData.SatType))
+                continue;
 //Test whether the carrier and pseudorange are abnormal and terminate in time.
             if(!(tempSatlitData.L1&&tempSatlitData.L2&&tempSatlitData.C1&&tempSatlitData.C2))
             {
@@ -452,7 +498,7 @@ void QPPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
             if(F1 == 0 || F2 == 0) continue;//Frequency cannot be 0
             //Computational relativity correction
             double relative = 0;
-            if(spp_pos[0] !=0 ) relative = getRelativty(tempSatlitData.SatType,pXYZ,spp_pos,pdXYZ);
+            if(spp_pos[0] !=0 ) relative = getRelativty(tempSatlitData.SatType, pXYZ,spp_pos,pdXYZ);
             tempSatlitData.Relativty = relative;
             //Calculate the autobiographic correction of the earth
             double earthW = 0;
@@ -503,10 +549,13 @@ void QPPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
             tempSatlitData.AntWindup = AntWindup;
             //Computation to eliminate ionospheric pseudorange and carrier combinations (here absorbed receiver carrier deflection and WindUp) add SatL1Offset and SatL1Offset by xiaogongwei 2019.04.12
             double alpha1 = (F1*F1)/(F1*F1 - F2*F2),alpha2 = (F2*F2)/(F1*F1 - F2*F2);
-            tempSatlitData.LL3 = alpha1*(tempSatlitData.L1 + tempSatlitData.L1Offset + tempSatlitData.SatL1Offset - tempSatlitData.AntWindup)*Lamta1
-                    - alpha2*(tempSatlitData.L2 + tempSatlitData.L2Offset + tempSatlitData.SatL2Offset - tempSatlitData.AntWindup)*Lamta2;//Eliminate ionospheric carrier LL3
-            tempSatlitData.PP3 = alpha1*(tempSatlitData.C1 + Lamta1*tempSatlitData.L1Offset + Lamta1*tempSatlitData.SatL1Offset)
-                    - alpha2*(tempSatlitData.C2 + Lamta2 *tempSatlitData.L2Offset + Lamta2*tempSatlitData.SatL2Offset);//Eliminate ionospheric carrier PP3
+            tempSatlitData.LL1 = Lamta1*(tempSatlitData.L1 + tempSatlitData.L1Offset + tempSatlitData.SatL1Offset - tempSatlitData.AntWindup);
+            tempSatlitData.LL2 = Lamta2*(tempSatlitData.L2 + tempSatlitData.L2Offset + tempSatlitData.SatL2Offset - tempSatlitData.AntWindup);
+            tempSatlitData.CC1 = tempSatlitData.C1 + Lamta1*tempSatlitData.L1Offset + Lamta1*tempSatlitData.SatL1Offset;
+            tempSatlitData.CC2 = tempSatlitData.C2 + Lamta2 *tempSatlitData.L2Offset + Lamta2*tempSatlitData.SatL2Offset;
+
+            tempSatlitData.LL3 = alpha1*tempSatlitData.LL1 - alpha2*tempSatlitData.LL2;//Eliminate ionospheric carrier LL3
+            tempSatlitData.PP3 = alpha1*tempSatlitData.CC1 - alpha2*tempSatlitData.CC2;//Eliminate ionospheric carrier PP3
             // save data to currEpoch
             currEpoch.append(tempSatlitData);
         }
@@ -534,12 +583,13 @@ void QPPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
         // debug by xiaogongwei 2018.11.17
         if(diff_3d.cwiseAbs().maxCoeff() < 1)
         {
+            spp_pos[3] = Xk[3];// save base clk
             store_currEpoch = currEpoch;
             break;
         }
         if(diff_3d.cwiseAbs().maxCoeff() > 2e7 || !isnormal(diff_3d[0]) || iterj == max_iter - 1)
         {
-            memset(spp_pos, 0, 3*sizeof(double));
+            memset(spp_pos, 0, 4*sizeof(double));
             epochSatlitData = currEpoch;// debug by xiaogongwei 2019.09.25
             return ;
         }
@@ -551,7 +601,7 @@ void QPPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
 //    getGoodSatlite(prevEpochSatlitData,store_currEpoch, m_CutAngle);
     if(store_currEpoch.length() < m_minSatFlag)
     {
-        memset(spp_pos, 0, 3*sizeof(double));// debug by xiaogongwei 2019.09.25
+        memset(spp_pos, 0, 4*sizeof(double));// debug by xiaogongwei 2019.09.25
         epochSatlitData = store_currEpoch;// debug by xiaogongwei 2019.04.10
         return ;
     }
@@ -608,7 +658,7 @@ void QPPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
         }
         else
         {
-            memset(spp_pos, 0, 3*sizeof(double));// debug by xiaogongwei 2019.09.25
+            memset(spp_pos, 0, 4*sizeof(double));// debug by xiaogongwei 2019.09.25
             break;
         }
     }
@@ -629,9 +679,8 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
     //Traversing data one by one epoch, reading O file data
     QString disPlayQTextEdit = "";// display for QTextEdit
     QVector < SatlitData > prevEpochSatlitData;//Store satellite data of an epoch, use cycle slip detection（Put it on top, otherwise read multReadOFile epochs, the life cycle will expire when reading）
-    double spp_pos[3] = {0};// store SPP pos and
+    double spp_pos[4] = {0};// store SPP pos and clk
     memcpy(spp_pos, m_ApproxRecPos, 3*sizeof(double));
-    double store_epoch_ZHD = 0;// dbug by xiaogongwei 2018.12.24 store ZHD of epoch
     int epoch_num = 0, continue_bad_epoch = 0;//Record the first epoch
     bool isInitSpp = false;
     if(spp_pos[0] !=0 ) isInitSpp = true;
@@ -644,7 +693,6 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
         {
             QVector< SatlitData > epochSatlitData;//Temporary storage of uncalculated data for each epoch satellite
             QVector< SatlitData > epochResultSatlitData;// Store each epoch satellite to calculate the correction data
-            store_epoch_ZHD = 0; // clear store_epoch_ZHD for epoch
             epochSatlitData = multepochSatlitData.at(epoch);
             if(epochSatlitData.length() == 0) continue;
             GPSPosTime epochTime;
@@ -657,19 +705,21 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             for(int i = 0;i < epochSatlitData.length();i++)
                 epochSatlitData[i].UTCTime.epochNum = epoch_num;
 
-            if(epoch_num == 2879)
+            if(epoch_num == 2271)
             {// Debug for epoch
                 //2018-12- 8 13: 4: 0.0000000
                 int a = 0;
             }
-//            qDebug() << epoch_num;
-            // use spp compute postion and smooth pesudorange
-            if(!isInitSpp || m_isKinematic)
-                SimpleSPP(prevEpochSatlitData, epochSatlitData, spp_pos);
-            else
+            // use spp compute postion and smooth pesudorange get clk at spp_pos[3]
+            // !isInitSpp || m_isKinematic
+            SimpleSPP(prevEpochSatlitData, epochSatlitData, spp_pos);
+
+            if(!isInitSpp && spp_pos[0] != 0)
+                memcpy(m_ApproxRecPos, spp_pos, 3*sizeof(double));
+            if(!m_isKinematic)
                 memcpy(spp_pos, m_ApproxRecPos, 3*sizeof(double));
             if(!isnormal(spp_pos[0]))
-                memset(spp_pos, 0, 3*sizeof(double));
+                memset(spp_pos, 0, 4*sizeof(double));
 
             // The number of skipping satellites is less than m_minSatFlag
             // update at 2018.10.17 for less m_minSatFlag satellites at the begin observtion
@@ -680,11 +730,16 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                     prevEpochSatlitData.clear();// Exception reinitialization
                     continue_bad_epoch = 0;
                 }
-                // set residual as zeros
+
                 for(int i = 0;i < epochSatlitData.length();i++)
                 {
+                    epochSatlitData[i].EpochFlag = 888;// add bad flag 888 for SPP
+                    // set residual as zeros
+                    epochSatlitData[i].VC1 = 0; epochSatlitData[i].VC2 = 0;
+                    epochSatlitData[i].VL1 = 0; epochSatlitData[i].VL2 = 0;
                     epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
                 }
+
                 disPlayQTextEdit = "GPST: " + QString::number(epochTime.Hours) + ":" + QString::number(epochTime.Minutes)
                         + ":" + QString::number(epochTime.Seconds) ;
                 autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
@@ -697,7 +752,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 int param_len = 3*epochSatlitData.length() + 32;
                 ENU_Vct.resize(param_len);
                 ENU_Vct.fill(0);
-                // debug by xiaogongwei 2019.02.21
+                // debug by xiaogongwei 2020.04.24
                 saveResult2Class(ENU_Vct, spp_vct, epochTime, epochSatlitData, epoch_num);
                 epoch_num++;
                 continue;
@@ -706,6 +761,8 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             for (int i = 0;i < epochSatlitData.length();i++)
             {
                 SatlitData tempSatlitData = epochSatlitData.at(i);//Store calculated corrected satellite data
+                if(!isInSystem(tempSatlitData.SatType))
+                    continue;
 //Test whether the carrier and pseudorange are abnormal and terminate in time.
                 if(!(tempSatlitData.L1&&tempSatlitData.L2&&tempSatlitData.C1&&tempSatlitData.C2))
                 {
@@ -723,6 +780,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 // Note: Time is the signal transmission time(m_PrnGpst - tempSatlitData.C2/M_C)
                 getCLKData(tempSatlitData.PRN,tempSatlitData.SatType,m_PrnGpst - tempSatlitData.C2/M_C,&stalitClock);
                 tempSatlitData.StaClock = stalitClock;
+                tempSatlitData.StaClockRate = 0;
                 //Obtain the coordinates of the epoch satellite from the SP3 data data
                 double pXYZ[3] = {0},pdXYZ[3] = {0}, sp3Clk = 0.0;//Unit m
                 // Note: Time is the signal transmission time(m_PrnGpst - tempSatlitData.C2/M_C - tempSatlitData.StaClock/M_C)
@@ -740,12 +798,17 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                     m_writeFileClass.allBadSatlitData.append(tempSatlitData);
                     continue;
                 }
-//PPP removes 5 satellites with poor GEO orbit in front of Beidou
-                if(tempSatlitData.SatType == 'C' && tempSatlitData.PRN <= 5)
+//PPP removes  satellites
+                QString removeSat = QString(tempSatlitData.SatType);
+                if(tempSatlitData.PRN < 10)
+                    removeSat += "0" + QString::number(tempSatlitData.PRN);
+                else
+                    removeSat += QString::number(tempSatlitData.PRN);
+                if(m_deleteSats.contains(removeSat, Qt::CaseInsensitive))
                 {
                     QString errorline;
                     ErrorMsg(errorline);
-                    tempSatlitData.badMsg.append("remove GEO of Beidou"+errorline);
+                    tempSatlitData.badMsg.append("remove " + removeSat +errorline);
                     m_writeFileClass.allBadSatlitData.append(tempSatlitData);
                     continue;
                 }
@@ -754,7 +817,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 if(F1 == 0 || F2 == 0) continue;//Frequency cannot be 0
                 //Computational relativity correction
                 double relative = 0;
-                relative = getRelativty(tempSatlitData.SatType,pXYZ,spp_pos,pdXYZ);
+                relative = getRelativty(tempSatlitData.SatType, pXYZ,spp_pos,pdXYZ);
                 tempSatlitData.Relativty = relative;
                 //Calculate the satellite's high sitting angle (as the receiver approximates the target)
                 double EA[2]={0};
@@ -771,12 +834,9 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                     epochTime.Hours,epochTime.Minutes,epochTime.Seconds) - 2400000.5;//Simplified Julian Day
                 //Calculate and save the annual accumulation date
                 double TDay = qCmpGpsT.YearAccDay(epochTime.Year,epochTime.Month,epochTime.Day);
-                double p_BLH[3] = {0},mf = 0, TropZHD_s = 0;
+                double p_BLH[3] = {0},mf = 0, TropZHD_s = 0, store_epoch_ZHD;
                 qCmpGpsT.XYZ2BLH(spp_pos[0], spp_pos[1], spp_pos[2], p_BLH);
-                if(0 == store_epoch_ZHD)
-                    getTropDelay(MJD,TDay,EA[0],p_BLH,&mf, &TropZHD_s, NULL, &store_epoch_ZHD);
-                else
-                    getTropDelay(MJD,TDay,EA[0],p_BLH,&mf, &TropZHD_s, NULL);
+                getTropDelay(MJD,TDay,EA[0],p_BLH,&mf, &TropZHD_s, NULL, &store_epoch_ZHD);
                 tempSatlitData.SatTrop = TropZHD_s;
                 tempSatlitData.StaTropMap = mf;
                 tempSatlitData.UTCTime.TropZHD = store_epoch_ZHD;
@@ -813,13 +873,26 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
 
                 //Computation to eliminate ionospheric pseudorange and carrier combinations (here absorbed receiver carrier deflection and WindUp) add SatL1Offset and SatL1Offset by xiaogongwei 2019.04.12
                 double alpha1 = (F1*F1)/(F1*F1 - F2*F2),alpha2 = (F2*F2)/(F1*F1 - F2*F2);
-                tempSatlitData.LL3 = alpha1*(tempSatlitData.L1 + tempSatlitData.L1Offset + tempSatlitData.SatL1Offset - tempSatlitData.AntWindup)*Lamta1
-                        - alpha2*(tempSatlitData.L2 + tempSatlitData.L2Offset + tempSatlitData.SatL2Offset - tempSatlitData.AntWindup)*Lamta2;//Eliminate ionospheric carrier LL3
-                tempSatlitData.PP3 = alpha1*(tempSatlitData.C1 + Lamta1*tempSatlitData.L1Offset + Lamta1*tempSatlitData.SatL1Offset)
-                        - alpha2*(tempSatlitData.C2 + Lamta2 *tempSatlitData.L2Offset + Lamta2*tempSatlitData.SatL2Offset);//Eliminate ionospheric carrier PP3
+                tempSatlitData.LL1 = Lamta1*(tempSatlitData.L1 + tempSatlitData.L1Offset + tempSatlitData.SatL1Offset - tempSatlitData.AntWindup);
+                tempSatlitData.LL2 = Lamta2*(tempSatlitData.L2 + tempSatlitData.L2Offset + tempSatlitData.SatL2Offset - tempSatlitData.AntWindup);
+                tempSatlitData.CC1 = tempSatlitData.C1 + Lamta1*tempSatlitData.L1Offset + Lamta1*tempSatlitData.SatL1Offset;
+                tempSatlitData.CC2 = tempSatlitData.C2 + Lamta2 *tempSatlitData.L2Offset + Lamta2*tempSatlitData.SatL2Offset;
+                tempSatlitData.LL3 = alpha1*tempSatlitData.LL1 - alpha2*tempSatlitData.LL2;//Eliminate ionospheric carrier LL3
+                tempSatlitData.PP3 = alpha1*tempSatlitData.CC1 - alpha2*tempSatlitData.CC2;//Eliminate ionospheric carrier PP3
                 //Save an epoch satellite data
                 epochResultSatlitData.append(tempSatlitData);
             }//End of an epoch. for (int i = 0;i < epochSatlitData.length();i++)
+
+//            if((epoch_num+1)%200 == 0)
+//            {// Debug for epoch
+//                //2018-12- 8 13: 4: 0.0000000
+//                for(int i = 0;i < epochResultSatlitData.length()-1;i++)
+//                {
+//                    epochResultSatlitData[i].StaClock += 100;
+//                }
+//                int a = 0;
+//            }
+
             //Monitor satellite quality and cycle slip
             getGoodSatlite(prevEpochSatlitData,epochResultSatlitData, m_CutAngle);
 
@@ -831,11 +904,16 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                     prevEpochSatlitData.clear();// Exception reinitialization
                     continue_bad_epoch = 0;
                 }
-                // set residual as zeros
-                for(int i = 0;i < epochSatlitData.length();i++)
+
+                for(int i = 0;i < epochResultSatlitData.length();i++)
                 {
-                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
+                    epochResultSatlitData[i].EpochFlag = 777;// add bad flag 777 for getGoodSatlite
+                    // set residual as zeros
+                    epochResultSatlitData[i].VC1 = 0; epochResultSatlitData[i].VC2 = 0;
+                    epochResultSatlitData[i].VL1 = 0; epochResultSatlitData[i].VL2 = 0;
+                    epochResultSatlitData[i].VLL3 = 0; epochResultSatlitData[i].VPP3 = 0;
                 }
+
                 // display clock jump
                 disPlayQTextEdit = "Valid Satellite Number: " + QString::number(epochResultSatlitData.length()) + ENDLINE +
                         "Waring: ***************Satellite number not sufficient*****************";
@@ -846,6 +924,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
                 int param_len = 3*epochResultSatlitData.length() + 32;
                 ENU_Vct.resize(param_len);
                 ENU_Vct.fill(0);
+                // debug by xiaogongwei 2020.04.24
                 saveResult2Class(ENU_Vct, spp_vct, epochTime, epochResultSatlitData, epoch_num);
                 epoch_num++;
                 continue;
@@ -867,15 +946,21 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
 //Save the last epoch satellite data
             if(is_filter_good)
             {
+                m_qualityCtrl.CmpSatClkRate(prevEpochSatlitData, epochResultSatlitData);// CmpSatClkRate add by 2020.01.03
                 prevEpochSatlitData = epochResultSatlitData;
                 continue_bad_epoch = 0;
             }
             else
             {
                 continue_bad_epoch++;
+                memset(spp_pos, 0, 4*sizeof(double));
                 memset(spp_vct, 0, 3*sizeof(double));
-                memset(spp_pos, 0, 3*sizeof(double));
                 X.setZero();
+            }
+            if(m_isKinematic && continue_bad_epoch++ > 8)
+            {
+                prevEpochSatlitData.clear();// Exception reinitialization
+                continue_bad_epoch = 0;
             }
 //Output calculation result(print result)
             // display every epoch results
@@ -904,6 +989,7 @@ void QPPPModel::Run(bool isDisplayEveryEpoch)
             saveResult2Class(ENU_Vct, spp_vct, epochTime, epochResultSatlitData, epoch_num, &P);
             epoch_num++;//Increase in epoch
         }//End of multiple epochs.  (int n = 0; n < multepochSatlitData.length();n++)
+
 
         // clear multepochSatlitData
         multepochSatlitData.clear();
@@ -945,11 +1031,22 @@ void QPPPModel::autoScrollTextEdit(QTextEdit *textEdit,QString &add_text)
 bool QPPPModel::connectHost()
 {
     if(m_isConnect) return true;
-    QString ftp_link = "cddis.gsfc.nasa.gov", user_name = "anonymous", user_password = "";//ftp information
+    QString ftp_link = "ftp.gfz-potsdam.de", user_name = "anonymous", user_password = "";//ftp information
     int Port = 21;
     ftpClient.FtpSetUserInfor(user_name, user_password);
     ftpClient.FtpSetHostPort(ftp_link, Port);
     m_isConnect = true;
+    return true;
+}
+
+bool QPPPModel::connectCNTHost()
+{
+    if(m_isConnectCNT) return true;
+    QString ftp_link = "ppp-wizard.net", user_name = "anonymous", user_password = "";//ftp information
+    int Port = 21;
+    ftpClient.FtpSetUserInfor(user_name, user_password);
+    ftpClient.FtpSetHostPort(ftp_link, Port);
+    m_isConnectCNT = true;
     return true;
 }
 
@@ -961,8 +1058,8 @@ QString QPPPModel::downErpFile(QString store_floder_path, int GPS_Week, int GPS_
     QString erp_path_name = "";
     if(!m_isConnect)
         return erp_path_name;
-    QString igs_short_path = "/pub/gps/products/", igs_productCompany = "igs";// set path of products
-    QString gbm_short_path = "/pub/gps/products/mgex/", gbm_productCompany = "gbm";// set path of products
+    QString igs_short_path = "/pub/home/GNSS/products/mgex/", igs_productCompany = "gbm";// set path of products
+    QString gbm_short_path = "/pub/home/GNSS/products/mgex/", gbm_productCompany = "gbm";// set path of products
     QString igs_path_string = "", igs_erp_name = "";
     //net file path
     igs_path_string.append(igs_short_path);
@@ -971,7 +1068,7 @@ QString QPPPModel::downErpFile(QString store_floder_path, int GPS_Week, int GPS_
     // file name
     igs_erp_name.append(igs_productCompany);
     igs_erp_name.append(QString::number(GPS_Week));
-    igs_erp_name.append(QString::number(7));
+    igs_erp_name.append(QString::number(GPS_day));
     igs_erp_name.append(".erp.Z");
     // down load begin
     bool is_down_igs = false;
@@ -1016,8 +1113,8 @@ QString QPPPModel::downErpFile(QString store_floder_path, int GPS_Week, int GPS_
 // fileList: if fileList least 3. down new product and change fileList
 QStringList QPPPModel::downProducts(QString store_floder_path, int GPS_Week, int GPS_day, QString productType)
 {
-    QString igs_short_path = "/pub/gps/products/", igs_productCompany = "igs";// set path of products
-    QString gbm_short_path = "/pub/gps/products/mgex/", gbm_productCompany = "gbm";// set path of products
+    QString igs_short_path = "/pub/home/GNSS/products/mgex/", igs_productCompany = "gbm";// set path of products
+    QString gbm_short_path = "/pub/home/GNSS/products/mgex/", gbm_productCompany = "gbm";// set path of products
     QStringList fileList;
     fileList.clear();
     if(!m_isConnect) return fileList;
@@ -1075,7 +1172,7 @@ QStringList QPPPModel::downProducts(QString store_floder_path, int GPS_Week, int
         if (productType.contains("sp3", Qt::CaseInsensitive))
             fileName.append(".sp3.Z");
         else if (productType.contains("clk", Qt::CaseInsensitive))
-            fileName.append(".clk.Z");
+            fileName.append(".clk.Z");//.clk_30s.Z or .clk.Z
         else
             return fileList;
         tempStr.append(fileName); // save filename and ftp path
@@ -1094,29 +1191,31 @@ QStringList QPPPModel::downProducts(QString store_floder_path, int GPS_Week, int
         QString gbm_temp_local_file = store_floder_path, igs_temp_local_file = store_floder_path;
         gbm_temp_local_file.append(three_fileNames.at(i));
         igs_temp_local_file.append(igs_three_fileNames.at(i));
+
         if(!ftpClient.FtpGet(net_fileList.at(i), gbm_temp_local_file))
         {
             disPlayQTextEdit = "download: " + net_fileList.at(i) + " bad!";
             autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
+            is_down_gbm = false;
             if(!ftpClient.FtpGet(igs_net_fileList.at(i), igs_temp_local_file))
             {
                 disPlayQTextEdit = "download: " + igs_net_fileList.at(i) + " bad!";
                 autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
-                is_down_igs = false;
             }
             else
             {
+                is_down_igs = true;
                 disPlayQTextEdit = "download: " + igs_net_fileList.at(i) + " success!";
                 autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
-                is_down_igs = true;
             }
         }
         else
         {
-            is_down_gbm = true;
             disPlayQTextEdit = "download: " + net_fileList.at(i) + " success!";
             autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
+            is_down_gbm = true;
         }
+
         // save products file to fileList
         QString temp_local_file;
         if(is_down_gbm)
@@ -1126,22 +1225,86 @@ QStringList QPPPModel::downProducts(QString store_floder_path, int GPS_Week, int
         // If the download fail
         if(!is_down_gbm && !is_down_igs)
         {
-            m_haveObsFile = false;
             disPlayQTextEdit = "download: gbm or igs products bad, Procedure will terminate!";
             autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
         }
         int extend_name = temp_local_file.lastIndexOf(".");
         QString product_name = temp_local_file.mid(0, extend_name);
-        fileList.append(product_name);
         // umcompress ".Z"
         QFileInfo fileinfo(temp_local_file);
         if(0 != fileinfo.size())
         {
             MyCompress compress;
-            compress.UnCompress(temp_local_file, store_floder_path);
+            if(compress.UnCompress(temp_local_file, store_floder_path))
+                fileList.append(product_name);
+            else
+                fileList.clear();
+        }
+    }//for(int i = 0; i < 3;i++)
+    return fileList;
+}
+
+// dowload CNT products, this product update only one day
+QStringList QPPPModel::downCNTProducts(QString store_floder_path, int GPS_Week, int GPS_day, QString productType)
+{
+    QString cnt_short_path = "/PRODUCTS/REAL_TIME/", cnt_productCompany = "cnt";// set path of products
+    QStringList fileList;
+    fileList.clear();
+    if(!m_isConnectCNT) return fileList;
+    //get fileList
+    QString tempStr = "", fileName = "", disPlayQTextEdit = "", net_path = "", local_path = "";
+    bool is_down_cnt = false;
+
+    // get cnt products
+    tempStr.append(cnt_short_path);
+    fileName.append(cnt_productCompany);
+    fileName.append(QString::number(GPS_Week));
+    fileName.append(QString::number(GPS_day));
+    if (productType.contains("sp3", Qt::CaseInsensitive))
+        fileName.append(".sp3.gz");
+    else if (productType.contains("clk", Qt::CaseInsensitive))
+        fileName.append(".clk.gz");
+    else
+        return fileList;
+    tempStr.append(fileName); // save filename and ftp path
+    net_path = tempStr;
+    local_path = store_floder_path + fileName;
+    if(!ftpClient.FtpGet(net_path, local_path))
+    {
+        is_down_cnt = false;
+        disPlayQTextEdit = "download: " + net_path + " bad!";
+        autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
+    }
+    else
+    {
+        is_down_cnt = true;
+        disPlayQTextEdit = "download: " + net_path + " success!";
+        autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
+    }
+
+    if(!is_down_cnt)
+    {
+        disPlayQTextEdit = "download: cnt products bad, Procedure will terminate!, Please wait 24 hours!";
+        autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
+    }
+    else
+    {
+        int extend_name = local_path.lastIndexOf(".");
+        QString product_name = local_path.mid(0, extend_name);
+
+        // umcompress ".Z"
+        QFileInfo fileinfo(local_path);
+        if(0 != fileinfo.size())
+        {
+            MyCompress compress;
+            if(compress.UnCompress(local_path, store_floder_path))
+                fileList.append(product_name);
+            else
+                fileList.clear();
         }
     }
     return fileList;
+
 }
 
 //Destructor
@@ -1229,10 +1392,13 @@ double QPPPModel::getRelativty(char SatType, double *pSatXYZ,double *pRecXYZ,dou
     case 'E':   oldM_GM = 3.986004418E14; old_We = 7.2921151467E-5;   break;
     case 'C':   oldM_GM = 3.986004418E14;  old_We = 7.292115E-5;  break;
     }
-    double gravity_delay =  (2*oldM_GM/(v_light*v_light))*qLn((Rs+Rr+R)/(Rs+Rr-R));
-    dltaP=-2*a/M_C - gravity_delay;
+    double gravity_delay = 0.0;
+    gravity_delay =  -(2*oldM_GM/(v_light*v_light))*qLn((Rs+Rr+R)/(Rs+Rr-R));
+    dltaP=-2*a/M_C + gravity_delay;
     return dltaP;//m
 }
+
+
 
 //Calculate EA, E: satellite elevation angle, A: azimuth
 void QPPPModel::getSatEA(double X,double Y,double Z,double *approxRecvXYZ,double *EA)
@@ -1444,7 +1610,7 @@ void QPPPModel::getGoodSatlite(QVector< SatlitData > &prevEpochSatlitData,QVecto
     int preEpochLen = prevEpochSatlitData.length();
     int epochLen = epochSatlitData.length();
     if(epochLen == 0) return ;
-    reciveClkRapaire(prevEpochSatlitData, epochSatlitData);
+    reciveClkRapaire(prevEpochSatlitData, epochSatlitData);// Rapaire recive Clk
 
     //Cycle slip detection
     QVector< int > CycleFlag;//Record the position of the weekly jump
@@ -1527,6 +1693,7 @@ void QPPPModel::getGoodSatlite(QVector< SatlitData > &prevEpochSatlitData,QVecto
             }
         }
     }
+
     //Remove low quality and weekly hop satellites
     QVector< SatlitData > tempEpochSatlitData;
     for (int i = 0;i < epochLen;i++)
@@ -1563,7 +1730,10 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
     if(epochResultSatlitData.length() >= m_minSatFlag) epoch_ZHD = epochResultSatlitData.at(0).UTCTime.TropZHD;
     ClockData epochRecClock;
     epochRecClock.UTCTime= epochRecivePos.UTCtime;
-    epochRecClock.ZTD_W = X(3) + epoch_ZHD;//Storage wet delay + dry delay
+    if(X(3) == 0)
+        epochRecClock.ZTD_W = 0;
+    else
+        epochRecClock.ZTD_W = X(3) + epoch_ZHD;//Storage zenith wet delay + zenith dry delay
     // save clock
     memset(epochRecClock.clockData, 0, 6*sizeof(double));
     //Stores the receiver skew of the first system, and the relative offset of its other systems  GCRE
@@ -1587,27 +1757,54 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
         }
     }
     if(!m_IS_MAX_OBS) m_writeFileClass.allClock.append(epochRecClock);
-    //Save satellite ambiguity
-    Ambiguity oneSatAmb;
-    for (int i = 0;i < epochResultSatlitData.length();i++)
+    if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
     {
-        SatlitData oneSat = epochResultSatlitData.at(i);
-        oneSatAmb.PRN = oneSat.PRN;
-        oneSatAmb.SatType = oneSat.SatType;
-        oneSatAmb.UTCTime = epochRecClock.UTCTime;
-        oneSatAmb.isIntAmb = false;
-//        memcpy(oneSatAmb.EA, oneSat.EA, 2*sizeof(double));
-//        oneSatAmb.ionL1 = 0.0;
-//        oneSatAmb.Amb1 = 0.0;
-//        oneSatAmb.Amb2 = 0.0;
-        oneSatAmb.Amb = X(i+const_num);
-        epochResultSatlitData[i].ionL1 = 0.0;
-        epochResultSatlitData[i].Amb1 = 0.0;
-        epochResultSatlitData[i].Amb2 = 0.0;
-        epochResultSatlitData[i].Amb = X(i+const_num);
-//        oneSatAmb.UTCTime.epochNum = epochNum;
-        if(!m_IS_MAX_OBS) m_writeFileClass.allAmbiguity.append(oneSatAmb);
-
+        int sat_num = epochResultSatlitData.length();
+        //Save satellite ambiguity
+        Ambiguity oneSatAmb;
+        for (int i = 0;i < sat_num;i++)
+        {
+            SatlitData oneSat = epochResultSatlitData.at(i);
+            oneSatAmb.PRN = oneSat.PRN;
+            oneSatAmb.SatType = oneSat.SatType;
+            oneSatAmb.UTCTime = epochRecClock.UTCTime;
+            oneSatAmb.isIntAmb = false;
+            memcpy(oneSatAmb.EA, oneSat.EA, 2*sizeof(double));
+            oneSatAmb.ionL1 = X(i+const_num);
+            oneSatAmb.Amb1 = X(i+const_num+sat_num);
+            oneSatAmb.Amb2 = X(i+const_num+2*sat_num);
+            oneSatAmb.Amb = 0.0;
+            epochResultSatlitData[i].ionL1 = X(i+const_num);
+            epochResultSatlitData[i].Amb1 = X(i+const_num+sat_num);
+            epochResultSatlitData[i].Amb2 = X(i+const_num+2*sat_num);
+            epochResultSatlitData[i].Amb = 0.0;
+            oneSatAmb.UTCTime.epochNum = epochNum;
+            if(!m_IS_MAX_OBS) m_writeFileClass.allAmbiguity.append(oneSatAmb);
+        }
+    }
+    else if(getPPPModel() == PPP_MODEL::PPP_Combination)
+    {
+        //Save satellite ambiguity
+        Ambiguity oneSatAmb;
+        for (int i = 0;i < epochResultSatlitData.length();i++)
+        {
+            SatlitData oneSat = epochResultSatlitData.at(i);
+            oneSatAmb.PRN = oneSat.PRN;
+            oneSatAmb.SatType = oneSat.SatType;
+            oneSatAmb.UTCTime = epochRecClock.UTCTime;
+            oneSatAmb.isIntAmb = false;
+            memcpy(oneSatAmb.EA, oneSat.EA, 2*sizeof(double));
+            oneSatAmb.ionL1 = 0.0;
+            oneSatAmb.Amb1 = 0.0;
+            oneSatAmb.Amb2 = 0.0;
+            oneSatAmb.Amb = X(i+const_num);
+            epochResultSatlitData[i].ionL1 = 0.0;
+            epochResultSatlitData[i].Amb1 = 0.0;
+            epochResultSatlitData[i].Amb2 = 0.0;
+            epochResultSatlitData[i].Amb = X(i+const_num);
+            oneSatAmb.UTCTime.epochNum = epochNum;
+            if(!m_IS_MAX_OBS) m_writeFileClass.allAmbiguity.append(oneSatAmb);
+        }
     }
     // save used satlite Information
     if(!m_IS_MAX_OBS) m_writeFileClass.allPPPSatlitData.append(epochResultSatlitData);
@@ -1647,16 +1844,27 @@ void QPPPModel::saveResult2Class(VectorXd X, double *spp_vct, GPSPosTime epochTi
         }
         m_writeFileClass.allBadSatlitData.clear();
     }// end of if(m_IS_MAX_OBS)
+
 }
 
 
 void QPPPModel::writeResult2File()
 {
     QString product_path = m_run_floder, ambiguit_floder;
-    QString floder_name = "Products_" + m_Solver_Method + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
+    // product name
+    QString Product_name = "IGS";
+    if(m_Sp3FileNames.length() > 0)
+    {
+        QString sp3name_path = m_Sp3FileNames.at(0);
+        int index_p = sp3name_path.lastIndexOf("/");// get sp3 name
+        QString sp3name = sp3name_path.mid(index_p+1);
+        Product_name = sp3name.mid(0,3).toUpper();
+    }
+    QString floder_name = Product_name + "Products_" + m_Solver_Method + "_" + m_PPPModel_Str + "_Static_"  + m_sys_str + PATHSEG; //+ "_1e8" + "_1e8_new"
     if(m_isKinematic)
-        floder_name = "Products_" + m_Solver_Method + "_Kinematic_" + m_sys_str +PATHSEG;
+        floder_name = Product_name + "Products_" + m_Solver_Method + "_" + m_PPPModel_Str + "_Kinematic_" + m_sys_str +PATHSEG;
     product_path.append(floder_name);
+    m_floder_name = floder_name;
     // save images path
     m_save_images_path = product_path;
     ambiguit_floder = product_path + QString("Ambiguity") + PATHSEG;

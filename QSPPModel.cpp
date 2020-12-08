@@ -24,7 +24,8 @@ QSPPModel::~QSPPModel()
 
 //Run the specified directory file
 QSPPModel::QSPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method, QString Satsystem,
-                     QString TropDelay, double CutAngle, bool isKinematic, QString Smooth_Str, QString SPP_Model)
+                     QString TropDelay, double CutAngle, bool isKinematic, QString Smooth_Str,
+                     QString SPP_Model, QString pppmodel_t)
 {
     //Run the specified directory file initialization variable
     initVar();
@@ -56,19 +57,22 @@ QSPPModel::QSPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method,
 
 
     // use defualt config
-    setConfigure(Method, Satsystem, TropDelay, CutAngle, isKinematic, Smooth_Str, SPP_Model);
+    setConfigure(Method, Satsystem, TropDelay, CutAngle, isKinematic, Smooth_Str, SPP_Model, pppmodel_t);
     // save data to QPPPModel
     initSPPModel(OfileName);
 }
 
 
-void QSPPModel::setConfigure(QString Method, QString Satsystem, QString TropDelay, double CutAngle, bool isKinematic, QString Smooth_Str, QString SPP_Model)
+void QSPPModel::setConfigure(QString Method, QString Satsystem, QString TropDelay, double CutAngle, bool isKinematic, QString Smooth_Str,
+                             QString SPP_Model, QString pppmodel_t)
 {
     // Configure
     m_Solver_Method = Method;// m_Solver_Method value can be "SRIF" or "Kalman"
     m_CutAngle = CutAngle;// (degree)
     m_SatSystem = Satsystem;// GPS, GLONASS, BDS, and Galieo are used respectively: the letters G, R, C, E
     m_TropDelay = TropDelay;// The tropospheric model m_TropDelay can choose Sass, Hopfiled, UNB3m
+    m_isKinematic = isKinematic;
+    m_PPPModel_Str = pppmodel_t;
     //Setting up the file system SystemStr:"G"(Turn on the GPS system);"GR":(Turn on the GPS+GLONASS system);"GRCE"(all open), etc.
     //GPS, GLONASS, BDS, and Galieo are used respectively: the letters G, R, C, E
     setSatlitSys(Satsystem);
@@ -124,7 +128,26 @@ void QSPPModel::setConfigure(QString Method, QString Satsystem, QString TropDela
         m_KalmanClass.setModel(QKalmanFilter::KALMAN_MODEL::PPP_KINEMATIC);// set Kinematic model
     }
 
-    m_isKinematic = isKinematic;
+    if(Method == "KalmanOu")
+    {
+        m_KalmanClass.setFilterMode(QKalmanFilter::KALMAN_FILLTER::KALMAN_MrOu);
+    }
+
+    if(m_PPPModel_Str.contains("Ion", Qt::CaseInsensitive))
+    {
+        setPPPModel(PPP_MODEL::PPP_Combination);
+        m_KalmanClass.setPPPModel(PPP_MODEL::PPP_Combination);
+        m_writeFileClass.setPPPModel(PPP_MODEL::PPP_Combination);
+    }
+    else if(m_PPPModel_Str.contains("Uncomb", Qt::CaseInsensitive))
+    {
+        setPPPModel(PPP_MODEL::PPP_NOCombination);
+        m_KalmanClass.setPPPModel(PPP_MODEL::PPP_NOCombination);
+        m_writeFileClass.setPPPModel(PPP_MODEL::PPP_NOCombination);
+    }
+    else
+        m_haveObsFile = false;
+
 }
 
 //Initialization operation
@@ -144,7 +167,7 @@ void QSPPModel::initVar()
     m_save_images_path = "";
     m_iswritre_file = false;
     m_minSatFlag = 4;// Dynamic Settings 5, Static Settings 1 in setConfigure()
-    m_isSmoothRange = false;// Whether to use phase smoothing pseudorange for SPP
+    m_isSmoothRange = false;// Whether to use phase smoothing pseudorange for SPPz
 }
 
 //Constructor
@@ -462,6 +485,8 @@ void QSPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
         for (int i = 0;i < epochSatlitData.length();i++)
         {
             SatlitData tempSatlitData = epochSatlitData.at(i);//Store calculated corrected satellite data
+            if(!isInSystem(tempSatlitData.SatType))
+                continue;
 //Test whether the carrier and pseudorange are abnormal and terminate in time.
             if(!(tempSatlitData.L1&&tempSatlitData.L2&&tempSatlitData.C1&&tempSatlitData.C2))
                 continue;
@@ -533,17 +558,20 @@ void QSPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
             tempSatlitData.AntWindup = 0;
             //Computation to eliminate ionospheric pseudorange and carrier combinations (here absorbed receiver carrier deflection and WindUp)  add SatL1Offset and SatL1Offset by xiaogongwei 2019.04.12
             double alpha1 = (F1*F1)/(F1*F1 - F2*F2),alpha2 = (F2*F2)/(F1*F1 - F2*F2);
-            tempSatlitData.LL3 = alpha1*(tempSatlitData.L1 + tempSatlitData.L1Offset + tempSatlitData.SatL1Offset - tempSatlitData.AntWindup)*Lamta1
-                    - alpha2*(tempSatlitData.L2 + tempSatlitData.L2Offset + tempSatlitData.SatL2Offset - tempSatlitData.AntWindup)*Lamta2;//Eliminate ionospheric carrier LL3
-            tempSatlitData.PP3 = alpha1*(tempSatlitData.C1 + Lamta1*tempSatlitData.L1Offset + Lamta1*tempSatlitData.SatL1Offset)
-                    - alpha2*(tempSatlitData.C2 + Lamta2 *tempSatlitData.L2Offset + Lamta2*tempSatlitData.SatL2Offset);//Eliminate ionospheric carrier PP3
+            tempSatlitData.LL1 = Lamta1*(tempSatlitData.L1 + tempSatlitData.L1Offset + tempSatlitData.SatL1Offset - tempSatlitData.AntWindup);
+            tempSatlitData.LL2 = Lamta2*(tempSatlitData.L2 + tempSatlitData.L2Offset + tempSatlitData.SatL2Offset - tempSatlitData.AntWindup);
+            tempSatlitData.CC1 = tempSatlitData.C1 + Lamta1*tempSatlitData.L1Offset + Lamta1*tempSatlitData.SatL1Offset;
+            tempSatlitData.CC2 = tempSatlitData.C2 + Lamta2 *tempSatlitData.L2Offset + Lamta2*tempSatlitData.SatL2Offset;
+
+            tempSatlitData.LL3 = alpha1*tempSatlitData.LL1 - alpha2*tempSatlitData.LL2;//Eliminate ionospheric carrier LL3
+            tempSatlitData.PP3 = alpha1*tempSatlitData.CC1 - alpha2*tempSatlitData.CC2;//Eliminate ionospheric carrier PP3
             // save data to currEpoch
             currEpoch.append(tempSatlitData);
         }
         // judge satilite number large 4
         if(currEpoch.length() <= 4)
         {
-            memset(spp_pos, 0, 3*sizeof(double));// debug by xiaogongwei 2019.09.25
+            memset(spp_pos, 0, 4*sizeof(double));// debug by xiaogongwei 2019.09.25
             epochSatlitData = currEpoch;// debug by xiaogongwei 2019.04.10
             return ;
         }
@@ -564,12 +592,13 @@ void QSPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
         // debug by xiaogongwei 2018.11.17
         if(diff_3d.cwiseAbs().maxCoeff() < 1)
         {
+            spp_pos[3] = Xk[3];// save base clk
             store_currEpoch = currEpoch;
             break;
         }
         if(diff_3d.cwiseAbs().maxCoeff() > 2e7 || !isnormal(diff_3d[0]) || iterj == max_iter - 1)
         {
-            memset(spp_pos, 0, 3*sizeof(double));
+            memset(spp_pos, 0, 4*sizeof(double));
             epochSatlitData = currEpoch;// debug by xiaogongwei 2019.09.25
             return ;
         }
@@ -581,7 +610,7 @@ void QSPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
 //    getGoodSatlite(prevEpochSatlitData,store_currEpoch, m_CutAngle);
     if(store_currEpoch.length() < m_minSatFlag)
     {
-        memset(spp_pos, 0, 3*sizeof(double));// debug by xiaogongwei 2019.09.25
+        memset(spp_pos, 0, 4*sizeof(double));// debug by xiaogongwei 2019.09.25
         epochSatlitData = store_currEpoch;// debug by xiaogongwei 2019.04.10
         return ;
     }
@@ -639,7 +668,7 @@ void QSPPModel::SimpleSPP(QVector < SatlitData > &prevEpochSatlitData, QVector <
         }
         else
         {
-            memset(spp_pos, 0, 3*sizeof(double));// debug by xiaogongwei 2019.09.25
+            memset(spp_pos, 0, 4*sizeof(double));// debug by xiaogongwei 2019.09.25
             break;
         }
     }
@@ -660,7 +689,7 @@ void QSPPModel::Run(bool isDisplayEveryEpoch)
     //Traversing data one by one epoch, reading O file data
     QString disPlayQTextEdit = "";// display for QTextEdit
     QVector < SatlitData > prevEpochSatlitData;//Store the satellite data of an epoch, use the cycle hop detection (put it on the top or read multReadOFile epochs, and the life cycle will expire when reading)
-    double spp_pos[3] = {0};// store SPP pos and filtter spp
+    double spp_pos[4] = {0};// store SPP pos and filtter spp
     Vector3d spp_vct;// save spp pos
     spp_vct.fill(0);
 
@@ -694,11 +723,6 @@ void QSPPModel::Run(bool isDisplayEveryEpoch)
             if(epochSatlitData.length() < m_minSatFlag || spp_pos[0] == 0)
             {
                 prevEpochSatlitData.clear();
-                // set residual as zeros
-                for(int i = 0;i < epochSatlitData.length();i++)
-                {
-                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
-                }
                 // display clock jump
                 disPlayQTextEdit = "Valid Satellite Number: " + QString::number(epochSatlitData.length()) + ENDLINE +
                         "Waring: ***************Satellite number not sufficient*****************";
@@ -746,11 +770,6 @@ void QSPPModel::Run(bool isDisplayEveryEpoch)
             if(epochSatlitData.length() < m_minSatFlag)
             {
                 prevEpochSatlitData.clear();
-                // set residual as zeros
-                for(int i = 0;i < epochSatlitData.length();i++)
-                {
-                    epochSatlitData[i].VLL3 = 0; epochSatlitData[i].VPP3 = 0;
-                }
                 // display clock jump
                 disPlayQTextEdit = "Valid Satellite Number: " + QString::number(epochSatlitData.length()) + ENDLINE +
                         "Waring: ***************Satellite number not sufficient*****************";
@@ -797,6 +816,7 @@ void QSPPModel::Run(bool isDisplayEveryEpoch)
                         + QString::number(spp_pos[2], 'f', 4) + " ]" + ENDLINE;
                 autoScrollTextEdit(mp_QTextEditforDisplay, disPlayQTextEdit);// display for QTextEdit
             }
+
 //Save each epoch X data to prepare for writing a file
             // translation to ENU
             VectorXd ENU_Vct;
@@ -908,7 +928,7 @@ double QSPPModel::getRelativty(double *pSatXYZ,double *pRecXYZ,double *pSatdXYZ)
     R=qCmpGpsT.norm(b,3);
     Rs = qCmpGpsT.norm(pSatXYZ,3);
     Rr = qCmpGpsT.norm(pRecXYZ,3);
-    dltaP=-2*a/M_C - (2*M_GM/qPow(M_C,2))*qLn((Rs+Rr+R)/(Rs+Rr-R));
+    dltaP=-2*a/M_C + (2*M_GM/qPow(M_C,2))*qLn((Rs+Rr+R)/(Rs+Rr-R));
     return dltaP;//m
 }
 
@@ -1189,10 +1209,9 @@ void QSPPModel::saveResult2Class(VectorXd X, Vector3d spp_vct, GPSPosTime epochT
     m_writeFileClass.allReciverPos.append(epochRecivePos);
     //Save wet delay and receiver clock error
     double epoch_ZHD = 0.0;
-
     if(epochResultSatlitData.length() >= m_minSatFlag) epoch_ZHD = epochResultSatlitData.at(0).UTCTime.TropZHD;
     ClockData epochRecClock;
-    epochRecClock.UTCTime= epochRecivePos.UTCtime;
+    epochRecClock.UTCTime = epochRecivePos.UTCtime;
     // save clock
     int clk_begin = 0;
     memset(epochRecClock.clockData, 0, 6*sizeof(double));
@@ -1203,21 +1222,47 @@ void QSPPModel::saveResult2Class(VectorXd X, Vector3d spp_vct, GPSPosTime epochT
     }
     else
     {
+        int amb_begin = 4 + m_sys_num;
         epochRecClock.ZTD_W = X(3) + epoch_ZHD;//Storage wet delay + zenith dry delay ZHD
         clk_begin = 4;
-        //Save satellite ambiguity
-        Ambiguity oneSatAmb;
-        int amb_begin = 4 + m_sys_num;
-        for (int i = 0;i < epochResultSatlitData.length();i++)
+        if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
         {
-            SatlitData oneSat = epochResultSatlitData.at(i);
-            oneSatAmb.PRN = oneSat.PRN;
-            oneSatAmb.SatType = oneSat.SatType;
-            oneSatAmb.UTCTime = epochRecClock.UTCTime;
-            oneSatAmb.isIntAmb = false;
-            oneSatAmb.Amb = X(i+amb_begin);
-            oneSatAmb.UTCTime.epochNum = epochNum;
-            m_writeFileClass.allAmbiguity.append(oneSatAmb);
+            int sat_num = epochResultSatlitData.length();
+            //Save satellite ambiguity
+            Ambiguity oneSatAmb;
+            for (int i = 0;i < sat_num;i++)
+            {
+                SatlitData oneSat = epochResultSatlitData.at(i);
+                oneSatAmb.PRN = oneSat.PRN;
+                oneSatAmb.SatType = oneSat.SatType;
+                oneSatAmb.UTCTime = epochRecClock.UTCTime;
+                oneSatAmb.isIntAmb = false;
+                oneSatAmb.ionL1 = X(i+amb_begin);
+                oneSatAmb.Amb1 = X(i+amb_begin+sat_num);
+                oneSatAmb.Amb2 = X(i+amb_begin+2*sat_num);
+                oneSatAmb.Amb = 0.0;
+                oneSatAmb.UTCTime.epochNum = epochNum;
+                m_writeFileClass.allAmbiguity.append(oneSatAmb);
+            }
+        }
+        else if(getPPPModel() == PPP_MODEL::PPP_Combination)
+        {
+            //Save satellite ambiguity
+            Ambiguity oneSatAmb;
+            for (int i = 0;i < epochResultSatlitData.length();i++)
+            {
+                SatlitData oneSat = epochResultSatlitData.at(i);
+                oneSatAmb.PRN = oneSat.PRN;
+                oneSatAmb.SatType = oneSat.SatType;
+                oneSatAmb.UTCTime = epochRecClock.UTCTime;
+                oneSatAmb.isIntAmb = false;
+                oneSatAmb.ionL1 = 0.0;
+                oneSatAmb.Amb1 = 0.0;
+                oneSatAmb.Amb2 = 0.0;
+                oneSatAmb.Amb = X(i+amb_begin);
+                oneSatAmb.UTCTime.epochNum = epochNum;
+                m_writeFileClass.allAmbiguity.append(oneSatAmb);
+            }
         }
     }
     //Store the receiver skew of the first system, and its relative offsets from other systems. GCRE
@@ -1256,10 +1301,11 @@ void QSPPModel::saveResult2Class(VectorXd X, Vector3d spp_vct, GPSPosTime epochT
 void QSPPModel::writeResult2File()
 {
     QString product_path = m_run_floder, ambiguit_floder;
-    QString floder_name = "Products_" + m_Solver_Method + "_SPP_Static_" + m_sys_str + PATHSEG;
+    QString floder_name = "Products_" + m_Solver_Method + "_" +m_PPPModel_Str + "_SPP_Static_" + m_sys_str + PATHSEG;
     if(m_isKinematic)
-        floder_name = "Products_" + m_Solver_Method + "_SPP_Kinematic_" + m_sys_str + PATHSEG;
+        floder_name = "Products_" + m_Solver_Method + "_" +m_PPPModel_Str + "_SPP_Kinematic_" + m_sys_str + PATHSEG;
     product_path.append(floder_name);
+    m_floder_name = floder_name;
     // save images path
     m_save_images_path = product_path;
     ambiguit_floder = product_path + QString("Ambiguity") + PATHSEG;

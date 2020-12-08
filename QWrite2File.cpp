@@ -163,6 +163,7 @@ bool QWrite2File::writeRecivePos2Txt(QString fload_path, QString tempfileName)
         saveFileOut<<"  ";
         saveFileOut.setFieldWidth(15);
         saveFileOut<<QString::number(oneRecivePos.dZ,'f',4);
+        saveFileOut.setFieldWidth(2);
 
         // write pos zigama = sqrt(Q(i,i)), i=1,2,3
         saveFileOut.setFieldWidth(2);
@@ -190,9 +191,6 @@ bool QWrite2File::writeRecivePos2Txt(QString fload_path, QString tempfileName)
 bool QWrite2File::writePPP2Txt(QString fload_path, QString tempfileName)
 {
 
-    int all_epoch_ppp_len = allPPPSatlitData.length();
-    if (0 == all_epoch_ppp_len) return false;
-
     if(!isDirExist(fload_path))
     {
         QString infor = "can not construct floder: " + fload_path;
@@ -209,6 +207,8 @@ bool QWrite2File::writePPP2Txt(QString fload_path, QString tempfileName)
     }
     QTextStream saveFileOut(&saveFile);
 
+    int all_epoch_ppp_len = allPPPSatlitData.length();
+    if (0 == all_epoch_ppp_len) return false;
     for (int i = 0;i < all_epoch_ppp_len;i++)
     {
         QVector < SatlitData > epochSatlite = allPPPSatlitData.at(i);
@@ -248,7 +248,15 @@ bool QWrite2File::writePPP2Txt(QString fload_path, QString tempfileName)
         saveFileOut.setFieldWidth(10);
         saveFileOut<<QString::number(recvPos.UTCtime.Seconds, 'f', 7);
         saveFileOut.setFieldWidth(6);
-        saveFileOut<<",ztd:";
+        saveFileOut<<",ZHD:";
+        // write ZTD and Epoch Flag
+        SatlitData oneStallit_t = epochSatlite.at(0);
+        saveFileOut.setFieldWidth(7);
+        saveFileOut<<QString::number(oneStallit_t.UTCTime.TropZHD,'f',4);
+        saveFileOut.setFieldWidth(12);
+        saveFileOut<<", BadFlag: ";
+        saveFileOut.setFieldWidth(3);
+        saveFileOut<<QString::number(oneStallit_t.EpochFlag);
         saveFileOut<<endl;
         //Output coordinate information
         for (int j = 0;j < StallitNumbers;j++)
@@ -265,12 +273,37 @@ bool QWrite2File::writePPP2Txt(QString fload_path, QString tempfileName)
             saveFileOut.setFieldWidth(2);
             saveFileOut<<": ";
 
-            saveFileOut.setFieldWidth(14);
-            saveFileOut<<QString::number(oneStallit.VLL3,'f',8);
-            saveFileOut.setFieldWidth(2);
-            saveFileOut<<", ";
-            saveFileOut.setFieldWidth(14);
-            saveFileOut<<QString::number(oneStallit.VPP3,'f',8);
+            if(getPPPModel() == PPP_MODEL::PPP_Combination)
+            {
+                // LL3
+                saveFileOut.setFieldWidth(14);
+                saveFileOut<<QString::number(oneStallit.VLL3,'f',8);
+                saveFileOut.setFieldWidth(2);
+                saveFileOut<<", ";
+                // PP3
+                saveFileOut.setFieldWidth(14);
+                saveFileOut<<QString::number(oneStallit.VPP3,'f',8);
+            }
+            else if(getPPPModel() == PPP_MODEL::PPP_NOCombination)
+            {
+                // L1 L2
+                saveFileOut.setFieldWidth(14);
+                saveFileOut<<QString::number(oneStallit.VL1,'f',8);
+                saveFileOut.setFieldWidth(2);
+                saveFileOut<<", ";
+                saveFileOut.setFieldWidth(14);
+                saveFileOut<<QString::number(oneStallit.VL2,'f',8);
+                saveFileOut.setFieldWidth(2);
+                saveFileOut<<", ";
+                // C1 C2
+                saveFileOut.setFieldWidth(14);
+                saveFileOut<<QString::number(oneStallit.VC1,'f',8);
+                saveFileOut.setFieldWidth(2);
+                saveFileOut<<", ";
+                saveFileOut.setFieldWidth(14);
+                saveFileOut<<QString::number(oneStallit.VC2,'f',8);
+            }
+
             saveFileOut.setFieldWidth(2);
             saveFileOut<<", ";
             saveFileOut.setFieldWidth(14);
@@ -520,7 +553,8 @@ bool QWrite2File::WriteAmbPRN(QString temp_floder,int PRN,char SatType)
     }
 
     QTextStream saveFileOut(&saveFile);
-
+    saveFileOut << "epochNumber | GPS Week second | fields | Ion_free amb (cycle) | Uncombined amb1 (cycle) | Uncombined amb2 (cycle) | L1 ion (m) | Elevation angle (degree) | Azimuth angle (degree)|";
+    saveFileOut << endl;
     int lenAbm = allAmbiguity.length();
     for (int i = 0;i <lenAbm;i++ )
     {
@@ -541,16 +575,17 @@ bool QWrite2File::WriteAmbPRN(QString temp_floder,int PRN,char SatType)
         saveFileOut<<"  ";
 
         //Write ambiguity
-        saveFileOut.setFieldWidth(10);
-        saveFileOut<<QString::number(1);
+        saveFileOut.setFieldWidth(4);
+        saveFileOut<<QString::number(6);
         saveFileOut.setFieldWidth(2);
         saveFileOut<<"  ";
         saveFileOut.setFieldWidth(16);
-        if (oneSatAmb.isIntAmb)
-            saveFileOut<<QString::number(qRound(oneSatAmb.Amb));
-        else
-            saveFileOut<<QString::number(oneSatAmb.Amb,'f',4);
-
+        saveFileOut<<QString::number(oneSatAmb.Amb,'f',4);
+        saveFileOut<<QString::number(oneSatAmb.Amb1,'f',4);
+        saveFileOut<<QString::number(oneSatAmb.Amb2,'f',4);
+        saveFileOut<<QString::number(oneSatAmb.ionL1,'f',4);
+        saveFileOut<<QString::number(oneSatAmb.EA[0],'f',4);
+        saveFileOut<<QString::number(oneSatAmb.EA[1],'f',4);
         saveFileOut.setFieldWidth(2);
         saveFileOut<<"  ";
 

@@ -22,6 +22,12 @@ bool QCmpGPST::readRepFile(QString m_erpFileName)
 	if (!m_erpFileName.isEmpty())
 	{//First determine if the user is passing the erp path
         isuseErp = readerp(m_erpFileName.toLatin1().data(),&m_erpData);
+        // erp file name
+        QFileInfo fileInfo(m_erpFileName);
+        QString erpName = fileInfo.fileName();
+        if(erpName.contains("gbm", Qt::CaseInsensitive)){
+            m_erpData.data->ut1_utc += 370;// 37s
+        }
 	}
 	else
 	{
@@ -147,7 +153,7 @@ void QCmpGPST::XYZ2ENU(double X,double Y,double Z,double *m_pENU,double *PX)
 //XYZ ： Receiver approximate coordinates. m_SAZ（radian）Returned calculation result  PX station coordinates
 void QCmpGPST::XYZ2SAZ(double *pXYZ,double *m_pSAZ,double *PX)
 {
-    XYZ2SAZ(pXYZ[0],pXYZ[1],pXYZ[2],m_pSAZ,PX);
+	XYZ2SAZ(pXYZ[0],pXYZ[1],pXYZ[2],m_pSAZ,PX);
 }
 void QCmpGPST::XYZ2BLH(double *pXYZ,double *m_pBLH)
 {
@@ -471,7 +477,7 @@ int QCmpGPST::readerp(const char *file, erp_t *erp)
 	//trace(3,"readerp: file=%s\n",file);
 
 	if (!(fp=fopen(file,"r"))) {
-        ErroTrace("QCmpGPST::readerp erp file open error.");
+		//trace(2,"erp file open error: file=%s\n",file);
 		return 0;
 	}
 	while (fgets(buff,sizeof(buff),fp)) {

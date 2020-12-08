@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -33,9 +33,8 @@
 **
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 
 #ifndef QSPPMODEL_H
@@ -69,7 +68,8 @@ class QSPPModel:public QBaseObject
 public:
     // Configure PPP parameters
     QSPPModel(QString files_path, QTextEdit *pQTextEdit = NULL, QString Method = "Kalman", QString Satsystem = "G",
-              QString TropDelay = "Sass", double CutAngle = 10, bool isKinematic = false, QString Smooth_Str = "Smooth", QString SPP_Model = "P_IF");
+              QString TropDelay = "Sass", double CutAngle = 10, bool isKinematic = false, QString Smooth_Str = "Smooth",
+              QString SPP_Model = "P_IF", QString pppmodel_t = "Ion_free");
     ~QSPPModel();
     void initSPPModel(QString OFileName);
     void Run(bool isDisplayEveryEpoch = true);//isDisplay Every Epoch represent is disply every epoch information?(ENU or XYZ)
@@ -78,7 +78,7 @@ public:
 // next public function is for GUI
     // configure model
     void setConfigure(QString Method = "Kalman", QString Satsystem = "G", QString TropDelay = "Sass", double CutAngle = 10,
-                      bool isKinematic = false, QString Smooth_Str = "Smooth", QString SPP_Model = "P_IF");
+                      bool isKinematic = false, QString Smooth_Str = "Smooth", QString SPP_Model = "P_IF", QString pppmodel_t = "Ion_free");
     // Get operation results( clear QWrite2File::allPPPSatlitData Because the amount of data is too large.)
     void getRunResult(PlotGUIData &plotData);
     bool isRuned(){return m_isRuned;}
@@ -121,6 +121,7 @@ private:
     double m_CutAngle;// cut-off height Angle (degree)
     QString m_SatSystem;// for GPS,GLONASS,BDS, and Galieo, use the letters G,R,C, and e. to set the file system m_SatSystem:"G"(turn on the GPS system); GR":(turn on GPS+GLONASS system);" GRCE"(all turned on), etc
     QString m_TropDelay;// the tropospheric model m_TropDelay can be selected as Sass, hopfield and UNB3m
+    QString m_PPPModel_Str;// // value is "Ion_free" or "Uncombined"
     QString m_sys_str;// satellite system for short ('G', 'R', 'C', 'E')
     bool m_isSmoothRange;// Whether to use phase smoothing pseudo-distance for SPP
     int m_sys_num;// number of satellite systems
@@ -147,7 +148,6 @@ private:
     int m_clock_jump_type;// 1 is Pseudo range jump, 2 is carrier jump
     // min flag
     int m_minSatFlag;// the minimum number of satellites required
-
 };
 
 

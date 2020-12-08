@@ -9,9 +9,11 @@ bool MyCompress::UnCompress(QString unCompressFile, QString unCompress_floder)
 {
     if(!isDirExist(unCompress_floder))
         return false;
+    bool is_Support = true;
     int point_index = unCompressFile.lastIndexOf(".");
-    QString extent_name = unCompressFile.mid(point_index).trimmed();
-    if(extent_name.compare(".Z", Qt::CaseInsensitive) == 0)
+     QString extent_name = unCompressFile.mid(point_index).trimmed();
+//    is_Support = extent_name.compare(".Z", Qt::CaseInsensitive) == 0;
+    if(is_Support)
     {
         if(MYCOMPRESS_H_isLiux)
         {
@@ -20,8 +22,7 @@ bool MyCompress::UnCompress(QString unCompressFile, QString unCompress_floder)
             QStringList param;
             param << "-d" << "-f" << unCompressFile;
             myProcess.start(app_path, param);
-            myProcess.waitForFinished();
-            return true;
+            return myProcess.waitForFinished();
         }
         else
         {
@@ -30,8 +31,7 @@ bool MyCompress::UnCompress(QString unCompressFile, QString unCompress_floder)
             QStringList param;
             param << "-d" << "-f" << unCompressFile;
             myProcess.start(app_path, param);
-            myProcess.waitForFinished();
-            return true;
+            return myProcess.waitForFinished();
         }
     }
 

@@ -462,7 +462,13 @@ void QReadGPSN::getSatPos(int PRN,char SatType,double signal_transmission_time,i
     double A[3] ={epochBrdData.TimeDiv,epochBrdData.TimeMove,epochBrdData.TimeMoveSpeed};
     double t0 = YMD2GPSTime(epochBrdData.UTCTime.Year, epochBrdData.UTCTime.Month, epochBrdData.UTCTime.Day,
                                    epochBrdData.UTCTime.Hours, epochBrdData.UTCTime.Minutes,epochBrdData.UTCTime.Seconds);
-    if(StaClock) *StaClock = computeSatClock(A,t,t0);//Multiply by the speed of light to become the distance m
+    // is jump week
+    double dltt_t = t - t0, tk = t;
+    if (dltt_t > 302400)
+        tk-=604800;
+    else if (dltt_t < -302400)
+        tk+=604800;
+    if(StaClock) *StaClock = computeSatClock(A,tk,t0);//Multiply by the speed of light to become the distance m
 	pXYZ[0] = X;pXYZ[1] = Y;pXYZ[2] = Z;
 	pdXYZ[0] = dX;pdXYZ[1] = dY;pdXYZ[2] = dZ;
 }
@@ -601,6 +607,12 @@ Vector3d QReadGPSN::RungeKuttaforGlonass(const BrdData &epochBrdData,double tk,d
 	dX0<<epochBrdData.epochNData.at(1),epochBrdData.epochNData.at(5),epochBrdData.epochNData.at(9);
 	ddX0<<epochBrdData.epochNData.at(2),epochBrdData.epochNData.at(6),epochBrdData.epochNData.at(10);
 
+    // is jump week
+    double dltt_t = tk - t0;
+    if (dltt_t > 302400)
+        tk-=604800;
+    else if (dltt_t < -302400)
+        tk+=604800;
 	double dh = 0;//Defining step size
 	if (tk > t0)
 		dh = 30;//(秒s)

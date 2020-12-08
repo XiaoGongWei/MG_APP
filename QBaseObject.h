@@ -1,8 +1,8 @@
 /*************************************************************************
 **
-**  MG-APP----Multi-GNSS-Automatic Precise Positioning Software
-**  Copyright (C) 2016-2020 XiaoGongWei
-**  This file is part of MG-APP.
+**  MG-APPS----Multi-GNSS-Automatic Precise Positioning Software
+**  Copyright (C) 2016-2019 XiaoGongWei
+**  This file is part of MG-APPS.
 **
 **  GNU Lesser General Public License Usage
 **  Alternatively, this file may be used under the terms of the GNU Lesser
@@ -31,31 +31,10 @@
 **  You should have received a copy of the GNU General Public License
 **  along with this program.  If not, see http://www.gnu.org/licenses/.
 **
-**  BSD 2-clause
-**  Copyright(c) 2007‐2013, T.Takasu, All rights reserved
-**  Redistribution and use in source and binary forms, with or without modification,
-**  permitted provided that the following conditions are met:
-**  1. Redistributions of source code must retain the above copyright notice,
-**  this list of conditions and the following disclaimer.
-**  2. Redistributions in binary form must reproduce the above copyright notice,
-**  this list of conditions and the following disclaimer in the documentation and/or
-**  other materials provided with the distribution.
-**
-**  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-**  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-**  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-**  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-**  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-**  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-**  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-**  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-**  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
-**  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************************
 **           Author: XiaoGongWei
-**   Website: github.com/xiaogongwei/MG_APP
-** Download link (The GPS Toolbox): https://www.ngs.noaa.gov/gps-toolbox/
-**             Date: 06.02.2020
+**  Website/Contact: http://github.com/xiaogongwei
+**             Date: 26.04.2019
 ****************************************************************************/
 
 #ifndef QBASEOBJECT_H
@@ -63,6 +42,7 @@
 
 #include <QString>
 #include <QDebug>
+#include <ConfigWidget.h>
 /*
 1.  illustration:
 QString tempLine = "G";
@@ -90,6 +70,7 @@ public:
     void setPPPModel(PPP_MODEL _PPP_MODEL) {m_PPP_MODEL = _PPP_MODEL;}
     PPP_MODEL getPPPModel() {return m_PPP_MODEL;}
     QString getSaveFloderName() {return m_floder_name;}
+    static ConfigWidget m_ConfigWidget;
 private:
     void initVar();//Initialize data (GPS is turned on by default)
 //Data section

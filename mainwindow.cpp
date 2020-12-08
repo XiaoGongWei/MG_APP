@@ -3,7 +3,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_ConfigWidget(parent)
 {
     ui->setupUi(this);
     // init Widget and add it
@@ -15,7 +16,6 @@ MainWindow::~MainWindow()
 {
     if(m_mutiply_data.length() > 0)
         m_mutiply_data.clear();
-    delete m_AboutAct;
     delete ui;
 }
 void MainWindow::closeEvent(QCloseEvent *e)
@@ -25,13 +25,24 @@ void MainWindow::closeEvent(QCloseEvent *e)
 
 void MainWindow::AboutApp()
 {
-    QMessageBox::information(NULL, tr("About"), tr("This app was creat by XiaoGongWei.\n E-mail: xiaogongwei10@163.com\n github: github.com/xiaogongwei"));
+    QMessageBox::information(this, tr("About"), tr("This app was creat by XiaoGongWei.\n E-mail: xiaogongwei10@163.com\n Alipay(支付宝) Donate: 270734392@qq.com\n github: github.com/xiaogongwei/MG_APP"));
 }
+
+void MainWindow::paintEvent(QPaintEvent *)
+{
+    QPainter tupian(this);
+    QPixmap tu;
+    QString bkPath = m_App_floder + "images/BackG1.jpg";
+    tu.load(bkPath);
+    tupian.drawPixmap(this->rect(),tu);
+}
+
 
 void MainWindow::initWindow()
 {
-    m_station_path = "C:/Users/xiaog/Desktop/tmp/NONE";// Default directory of observation files
-//    m_station_path = "/home/david/MySoft/TestData/single_Station/JFNG0020.18o";
+    m_station_path = "C:/Users/Administrator/Desktop/wab20230";// Default directory of observation files
+//    m_station_path = "D:/Testdata/KIRI0020.18o";
+    m_App_floder = QCoreApplication::applicationDirPath() + PATHSEG;
     ui->textEdit_FilePath->setText(m_station_path);
     m_isRuned = false;
     m_isRunedBatch = false;
@@ -40,7 +51,7 @@ void MainWindow::initWindow()
     // fix windows
     setFixedSize(this->width(), this->height());
     setWindowIcon(QIcon("widget.ico"));
-    setWindowTitle("MG-APP v1.0");
+    setWindowTitle("MG-APPS v2.0.5");
     // connect signal to slots
     // pushButon
     connect(ui->pushButton_Select, SIGNAL(clicked(bool)), this, SLOT(selectFilePath()));
@@ -48,15 +59,26 @@ void MainWindow::initWindow()
     connect(ui->pushButton_SPP, SIGNAL(clicked(bool)), this, SLOT(RunSPP()));
     connect(ui->pushButton_RunBatch, SIGNAL(clicked(bool)), this, SLOT(RunPPPBatch()));
     connect(ui->pushButton_Plot, SIGNAL(clicked(bool)), this, SLOT(plotAllRes()));
+    // menuBar
+    m_otherMenu = menuBar()->addMenu("&Tools");
     // about
-    m_AboutAct = new QAction(tr("&About"),this);
-    m_AboutAct->setStatusTip(tr("App was creat by David Xiao."));
-    m_AboutAct->setIcon(QIcon("./images/about.ico"));
-    connect(m_AboutAct,SIGNAL(triggered()),this,SLOT(AboutApp()));
-    m_otherMenu = menuBar()->addMenu("&About");
-    m_otherMenu->addAction(m_AboutAct);
+    QString aboutPath = m_App_floder + "images/about.ico";
+    QAction *AboutAct = new QAction(tr("&About"),this);
+    AboutAct->setStatusTip(tr("App was creat by David Xiao."));
+    AboutAct->setIcon(QIcon(aboutPath));
+    connect(AboutAct,SIGNAL(triggered()),this,SLOT(AboutApp()));
+    m_otherMenu->addAction(AboutAct);
+
+    // Configure
+    QString cofPath = m_App_floder + "images/config.ico";
+    QAction *configureAct = new QAction(tr("&Configure"),this);
+    configureAct->setStatusTip(tr("Configure MG_APP."));
+    configureAct->setIcon(QIcon(cofPath));
+    connect(configureAct,SIGNAL(triggered()), &m_ConfigWidget,SLOT(show()));
+    m_otherMenu->addAction(configureAct);
+
     // status tip
-    setStatusTip("MG-APP is runing.");
+    setStatusTip("MG-APPS is runing.");
     ui->pushButton_Run->setStatusTip("Run PPP in single station.");
     ui->pushButton_RunBatch->setStatusTip("Run PPP in multiply stations.");
     ui->pushButton_SPP->setStatusTip("Run SPP in single station.");
@@ -220,7 +242,8 @@ void MainWindow::RunPPPBatch()
     // QComoBox
     QString TropDelay = ui->comboBox_TropDelay->currentText(),
             Method = ui->comboBox_Method->currentText(),
-            CutAngle_Str = ui->lineEdit_Angle->text();
+            CutAngle_Str = ui->lineEdit_Angle->text(),
+            PPPModel_Str = ui->comboBox_PPPModel->currentText();
     double CutAngle = CutAngle_Str.toDouble();
     // QCheckBox
     QString SatSystem = "";
@@ -235,13 +258,20 @@ void MainWindow::RunPPPBatch()
         SatSystem.append("C");
     if(ui->checkBox_Kinematic->isChecked())
         Kinematic = true;
-    QString Smooth_Str = ui->comboBox_PPP_SMOOTH->currentText();
+//    QString Smooth_Str = ui->comboBox_PPP_SMOOTH->currentText();
+    QString Smooth_Str = "NoSmooth";
+    QString m_Products = "igs";
+    if(ui->radioButton_igs->isChecked())
+        m_Products = "igs";
+    else if(ui->radioButton_cnt->isChecked())
+        m_Products = "cnt";
+
     // run batch stations
     if(!m_station_path.isEmpty())
     {
         ui->textEdit_Display->clear();// clear QTextEdit
         bool isBackBatch = ui->checkBox_Back->isChecked();
-        QBatchProcess batchPPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic, Smooth_Str, isBackBatch);
+        QBatchProcess batchPPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic, Smooth_Str, isBackBatch, m_Products, PPPModel_Str);
         batchPPP.Run(false);// false represent don't disply every epoch information(ENU or XYZ)
         m_isRunedBatch = batchPPP.isRuned();
         if(m_isRunedBatch)
@@ -277,11 +307,13 @@ void MainWindow::RunPPP()
     // QComoBox
     QString TropDelay = ui->comboBox_TropDelay->currentText(),
             Method = ui->comboBox_Method->currentText(),
-            CutAngle_Str = ui->lineEdit_Angle->text();
+            CutAngle_Str = ui->lineEdit_Angle->text(),
+            PPPModel_Str = ui->comboBox_PPPModel->currentText();
     double CutAngle = CutAngle_Str.toDouble();
     // QCheckBox
     QString SatSystem = "";
     bool Kinematic = false;
+    // Clock difference sequence of receiver
     if(ui->checkBox_GPS->isChecked())
         SatSystem.append("G");
     if(ui->checkBox_GLONASS->isChecked())
@@ -292,14 +324,34 @@ void MainWindow::RunPPP()
         SatSystem.append("C");
     if(ui->checkBox_Kinematic->isChecked())
         Kinematic = true;
-    QString Smooth_Str = ui->comboBox_PPP_SMOOTH->currentText();
+//    QString Smooth_Str = ui->comboBox_PPP_SMOOTH->currentText();
+    QString Smooth_Str = "NoSmooth";
+    QString m_Products = "igs";
+    if(ui->radioButton_igs->isChecked())
+        m_Products = "igs";
+    else if(ui->radioButton_cnt->isChecked())
+        m_Products = "cnt";
+// From Configure file
+    // Delete satellites
+    QString removeSats = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/deleteSats");
+    removeSats.append(";C01;C02;C03;C04;C05");// remove GEO of BeiDou
+    // SYS/#/OBS TYPES (Set the PPP dual-frequency observation type)
+    QVector<QStringList> ObsTypeSet = getConfObsType();
+    // Set Parameters
+    QString Qw_Str = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/Qw"),
+            Pk_Str = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/Pk"),
+            LP_Str = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/LP_precision");
+    QStringList Qw_StrList =  Qw_Str.split(";"), Pk_StrList = Pk_Str.split(";"),
+            LP_List = LP_Str.split(";");
+    QVector<QStringList> Qw_Pk;
+    Qw_Pk.append(Qw_StrList); Qw_Pk.append(Pk_StrList); Qw_Pk.append(LP_List);
 
     if(!m_station_path.isEmpty())
     {
         ui->textEdit_Display->clear();
         if(ui->checkBox_Back->isChecked())
         {
-            QPPPBackSmooth  myBkPPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic, Smooth_Str);
+            QPPPBackSmooth  myBkPPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic, Smooth_Str, m_Products, PPPModel_Str);
             myBkPPP.Run(true);// true represent disply every epoch information(ENU or XYZ)
             m_isRuned = myBkPPP.isRuned();
             if(m_isRuned)
@@ -310,7 +362,8 @@ void MainWindow::RunPPP()
         }
         else
         {
-            QPPPModel myPPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic, Smooth_Str);
+            QPPPModel myPPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic,
+                            Smooth_Str, m_Products, PPPModel_Str, removeSats, ObsTypeSet, Qw_Pk);
             myPPP.Run(true);// true represent disply every epoch information(ENU or XYZ)
             m_isRuned = myPPP.isRuned();
             if(m_isRuned)
@@ -339,7 +392,8 @@ void MainWindow::RunSPP()
     // QComoBox
     QString TropDelay = ui->comboBox_TropDelay->currentText(),
             Method = ui->comboBox_Method->currentText(),
-            CutAngle_Str = ui->lineEdit_Angle->text();
+            CutAngle_Str = ui->lineEdit_Angle->text(),
+            PPPModel_Str = ui->comboBox_PPPModel->currentText();;
     double CutAngle = CutAngle_Str.toDouble();
     // QCheckBox
     QString SatSystem = "";
@@ -361,7 +415,7 @@ void MainWindow::RunSPP()
     if(!m_station_path.isEmpty())
     {
         ui->textEdit_Display->clear();
-        QSPPModel mySPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic, Smooth_Str, SPP_Model);
+        QSPPModel mySPP(m_station_path, ui->textEdit_Display, Method, SatSystem, TropDelay, CutAngle, Kinematic, Smooth_Str, SPP_Model, PPPModel_Str);
         mySPP.Run(true);// false represent disply every epoch information(ENU or XYZ)
         m_isRuned = mySPP.isRuned();
         if(m_isRuned)
@@ -376,6 +430,38 @@ void MainWindow::RunSPP()
     }
 }
 
+QVector<QStringList> MainWindow::getConfObsType()
+{
+    QVector<QStringList> tempConfObs;
+    QString SatOBStype;
+    QStringList Sat_List;
+    // GPS
+    SatOBStype = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/GPS_OBS_TYPE");
+    Sat_List= SatOBStype.split(";");
+    Sat_List.prepend("G");
+    Sat_List.removeAll(QString(""));
+    if(Sat_List.length() >= 2)  tempConfObs.append(Sat_List);
+    //GLONASS
+    SatOBStype = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/GLONASS_OBS_TYPE");
+    Sat_List= SatOBStype.split(";");
+    Sat_List.prepend("R");
+    Sat_List.removeAll(QString(""));
+    if(Sat_List.length() >= 2)  tempConfObs.append(Sat_List);
+    //BDS
+    SatOBStype = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/BDS_OBS_TYPE");
+    Sat_List= SatOBStype.split(";");
+    Sat_List.prepend("C");
+    Sat_List.removeAll(QString(""));
+    if(Sat_List.length() >= 2)  tempConfObs.append(Sat_List);
+    //Galileo
+    SatOBStype = m_ConfigWidget.myConfTranIni.getValue("/MG_APP/Galileo_OBS_TYPE");
+    Sat_List= SatOBStype.split(";");
+    Sat_List.prepend("E");
+    Sat_List.removeAll(QString(""));
+    if(Sat_List.length() >= 2)  tempConfObs.append(Sat_List);
+
+    return tempConfObs;
+}
 
 void MainWindow::selectFilePath()
 {
