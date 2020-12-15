@@ -356,7 +356,7 @@ typedef struct _Clock
 //qDebug()<<erroInfo<<endl;
 #define ErroTrace(erroInfo) {QMessageBox::critical(NULL, "Error", erroInfo, QMessageBox::Yes);}
 #define ErrorMsg(myerromsg) \
-{char buff[256]; sprintf(buff, "%s, line:%d, fuction:%s", __FILE__, __LINE__, __func__); myerromsg = "----"+QString(buff)+"----";}
+{char buff[256]; sprintf(buff, "%s, line:%d, fuction:%s", __FILE__, __LINE__, __FUNCTION__); myerromsg = "----"+QString(buff)+"----";}// __func__ or __FUNCTION__
 // defines system newline characters
 #if defined(_WIN32)
 // Windows system

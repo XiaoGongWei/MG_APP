@@ -104,22 +104,22 @@ void ConfigWidget::clickOk()
 // Delete satellites
     QString deleteSats = ui->plainTextEdit_delSats->toPlainText();
     deleteSats = deleteSats.trimmed();
-    deleteSats = deleteSats.replace("；", ";");
+    deleteSats = deleteSats.replace(";", ";");
     deleteSats = deleteSats.replace(" ", ";");
     deleteSats = deleteSats.toUpper();
     allConfig.insert("deleteSats", deleteSats.toUtf8().data());
 // SYS/#/OBS TYPES (Set the PPP dual-frequency observation type)
     QString gps_obsType = ui->GPS_L1->toPlainText() + ";" + ui->GPS_L2->toPlainText();// GPS
-    gps_obsType = gps_obsType.replace("；", ";"); gps_obsType = gps_obsType.replace(" ", ";");
+    gps_obsType = gps_obsType.replace(";", ";"); gps_obsType = gps_obsType.replace(" ", ";");
     gps_obsType = gps_obsType.toUpper();
     QString glo_obsType = ui->GLO_L1->toPlainText() + ";" + ui->GLO_L2->toPlainText();// GLONASS
-    glo_obsType = glo_obsType.replace("；", ";"); glo_obsType = glo_obsType.replace(" ", ";");
+    glo_obsType = glo_obsType.replace(";", ";"); glo_obsType = glo_obsType.replace(" ", ";");
     glo_obsType = glo_obsType.toUpper();
     QString bds_obsType = ui->BDS_L1->toPlainText() + ";" + ui->BDS_L2->toPlainText();// BDS
-    bds_obsType = bds_obsType.replace("；", ";"); bds_obsType = bds_obsType.replace(" ", ";");
+    bds_obsType = bds_obsType.replace(";", ";"); bds_obsType = bds_obsType.replace(" ", ";");
     bds_obsType = bds_obsType.toUpper();
     QString gal_obsType = ui->GAL_L1->toPlainText() + ";" + ui->GAL_L2->toPlainText();// Galileo
-    gal_obsType = gal_obsType.replace("；", ";"); gal_obsType = gal_obsType.replace(" ", ";");
+    gal_obsType = gal_obsType.replace(";", ";"); gal_obsType = gal_obsType.replace(" ", ";");
     gal_obsType = gal_obsType.toUpper();
 
     allConfig.insert("GPS_OBS_TYPE", gps_obsType.toUtf8().data());
@@ -130,12 +130,12 @@ void ConfigWidget::clickOk()
     QString Qw_List = ui->Qw_pos->toPlainText() + ";" + ui->Qw_zwd->toPlainText() + ";"
             + ui->Qw_clk->toPlainText() + ";" + ui->Qw_amb->toPlainText() + ";"
             + ui->Qw_ion->toPlainText();// Qw String List
-    Qw_List = Qw_List.replace("；", ";"); Qw_List = Qw_List.replace(" ", ";");
+    Qw_List = Qw_List.replace(";", ";"); Qw_List = Qw_List.replace(" ", ";");
 
     QString Pk_List = ui->Pk_pos->toPlainText() + ";" + ui->Pk_zwd->toPlainText() + ";"
             + ui->Pk_clk->toPlainText() + ";" + ui->Pk_amb->toPlainText() + ";"
             + ui->Pk_ion->toPlainText();// Qw String List
-    Pk_List = Pk_List.replace("；", ";"); Pk_List = Pk_List.replace(" ", ";");
+    Pk_List = Pk_List.replace(";", ";"); Pk_List = Pk_List.replace(" ", ";");
 
     QString LP_precision = ui->L_precision->toPlainText() + ";" +ui->P_precision->toPlainText();
 

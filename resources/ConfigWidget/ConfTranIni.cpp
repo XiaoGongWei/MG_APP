@@ -52,6 +52,7 @@ bool ConfTranIni::writeJson2Ini(QString Inifilename, QString jsonText)
     QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonText.toUtf8());
     QJsonArray jsonArry = jsonDoc.array();
     writeJson2Ini(Inifilename, jsonArry);
+    return true;
 }
 
 bool ConfTranIni::writeJson2File(QString jsonfilename, QJsonArray jsonArry)

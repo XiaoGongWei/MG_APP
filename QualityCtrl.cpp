@@ -692,28 +692,22 @@ void QualityCtrl::Obtaining_equation(QVector< SatlitData > &currEpoch, double *A
         dltaZ = oneSatlit.Z - ApproxRecPos[2];
         p0 = qSqrt(dltaX*dltaX+dltaY*dltaY+dltaZ*dltaZ);
         li = dltaX/p0;mi = dltaY/p0;ni = dltaZ/p0;
-        //计算B矩阵
-        //P3伪距码矩阵
         B(i, 0) = li;B(i, 1) = mi;B(i, 2) = ni; B(i, 3) = -1;
-        //计算L矩阵
-        double dlta = 0;//各项那个改正
+        double dlta = 0;
         dlta =  - oneSatlit.StaClock + oneSatlit.SatTrop - oneSatlit.Relativty -
             oneSatlit.Sagnac - oneSatlit.TideEffect - oneSatlit.AntHeight;
-        //伪距码PP3
         if(isSmoothRange)
         {// add by xiaogongwei 2018.11.20
             L(i) = p0 - oneSatlit.PP3_Smooth + dlta;
-            // 计算权阵P
-            P(i, i) = 1 / oneSatlit.PP3_Smooth_Q;//smooth伪距权????
+            P(i, i) = 1 / oneSatlit.PP3_Smooth_Q;
         }
         else
         {
             L(i) = p0 - oneSatlit.PP3 + dlta;
-            // 计算权阵P
-            P(i, i) = oneSatlit.SatWight;//伪距权
+            P(i, i) = oneSatlit.SatWight;
         }
 
-    }//B,L计算完毕
+    }
     // save data to mat_B
     mat_B = B;
     Vct_L = L;

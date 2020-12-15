@@ -39,8 +39,9 @@ bool QNewFunLib::deleteDirectory(const QString &path)
 
     dir.setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
     QFileInfoList fileList = dir.entryInfoList();
-    foreach (QFileInfo fi, fileList)
+    for (int i = 0; i < fileList.length(); i++)
     {
+        QFileInfo fi = fileList.at(i);
         if (fi.isFile())
             fi.dir().remove(fi.fileName());
         else
@@ -48,3 +49,4 @@ bool QNewFunLib::deleteDirectory(const QString &path)
     }
     return dir.rmpath(dir.absolutePath());
 }
+
