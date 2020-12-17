@@ -38,6 +38,7 @@ QPPPModel::QPPPModel(QString files_path,  QTextEdit *pQTextEdit, QString Method,
     // find sp3 files
     tempFilters.clear();
     tempFilters.append("*.sp3");
+    tempFilters.append("*.eph");
     Sp3FileNamesList = searchFilterFile(m_run_floder, tempFilters);
     // find clk files
     tempFilters.clear();
