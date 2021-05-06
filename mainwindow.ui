@@ -139,11 +139,6 @@
        <string>SRIF</string>
       </property>
      </item>
-     <item>
-      <property name="text">
-       <string>KalmanOu</string>
-      </property>
-     </item>
     </widget>
     <widget class="QLabel" name="label_3">
      <property name="geometry">

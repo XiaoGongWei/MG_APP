@@ -496,24 +496,11 @@ void QKalmanFilter::changeKalmanPara_NoCombination( QVector< SatlitData > &epoch
 }
 
 
-//First version MrOu Kalman
+//First Kalman version Mr. Jikun Ou
 // PBk is Weight matrix
 void QKalmanFilter::KalmanforStaticOu(MatrixXd Bk,VectorXd Lk,MatrixXd F,MatrixXd Qwk,MatrixXd PBk,VectorXd &tXk_1,MatrixXd &tPk_1)
 {
-    //Time update
-    VectorXd Xkk_1 = F*tXk_1,LVk;
-    MatrixXd Pkk_1 = F*tPk_1*F.transpose() + Qwk;
-    LVk = Lk - Bk*Xkk_1;
 
-    //Filter update
-    MatrixXd Mk, Nk , Pkk_1_inv;
-    Nk = Bk.transpose()*PBk*Bk;
-    Pkk_1_inv = Pkk_1.inverse();
-    Mk = Nk + Pkk_1_inv;// Symmetry is not guaranteed
-//    Mk = (Nk + Nk.transpose()) / 2 + (Pkk_1_inv + Pkk_1_inv.transpose()) / 2;// Symmetry is not guaranteed
-    tPk_1 = Mk.inverse();
-    VectorXd delatXkd = tPk_1*(Bk.transpose())*PBk*LVk;
-    tXk_1 = Xkk_1 + delatXkd;
 }
 
 //Third version use to change Kalman
